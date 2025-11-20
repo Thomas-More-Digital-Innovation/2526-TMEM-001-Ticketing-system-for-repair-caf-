@@ -119,10 +119,27 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
       })
     }
 
-    // Generate unique tracking number
-    const timestamp = Date.now().toString(36).toUpperCase()
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-    const voorwerpNummer = `RC-${timestamp}-${random}`
+    // Generate unique 4-character tracking number (0-9 and A-Z)
+    const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    let voorwerpNummer = ''
+    let isUnique = false
+    
+    // Keep generating until we find a unique number
+    while (!isUnique) {
+      voorwerpNummer = ''
+      for (let i = 0; i < 4; i++) {
+        voorwerpNummer += characters.charAt(Math.floor(Math.random() * characters.length))
+      }
+      
+      // Check if this number already exists
+      const existing = await prisma.voorwerp.findUnique({
+        where: { voorwerpNummer }
+      })
+      
+      if (!existing) {
+        isUnique = true
+      }
+    }
 
     // Get "Geregistreerd" status
     const geregistreerdStatus = await prisma.voorwerpStatus.findFirst({

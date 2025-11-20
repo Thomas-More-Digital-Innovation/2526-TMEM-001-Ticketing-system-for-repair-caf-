@@ -30,7 +30,7 @@ export default function DeliverItemPage() {
 
       // Success - redirect with the item data
       localStorage.setItem('deliveredItem', JSON.stringify(result.voorwerp));
-      router.push('/counter/deliver/confirm');
+      router.push('/counter');
     } catch (err) {
       console.error('Deliver error:', err);
       setError('Er is een fout opgetreden. Probeer het opnieuw.');
