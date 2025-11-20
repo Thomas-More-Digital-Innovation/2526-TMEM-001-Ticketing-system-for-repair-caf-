@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import { loginAction } from '@/lib/actions/auth';
+import QRScanner from '../components/QRScanner';
+import { loginAction, loginWithQRToken } from '@/lib/actions/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +47,57 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error('Login error:', err);
+      setError('Er is een fout opgetreden. Probeer het opnieuw.');
+      setIsLoading(false);
+    }
+  };
+
+  const handleQRScan = async (data: string) => {
+    console.log('QR Scan received:', data);
+    setError('');
+    setIsLoading(true);
+    setShowQRScanner(false); // Close the scanner immediately
+
+    try {
+      // The QR code contains the token from QRLogin table
+      const token = data.trim();
+      
+      if (!token) {
+        setError('Ongeldige QR code');
+        setIsLoading(false);
+        return;
+      }
+
+      const result = await loginWithQRToken(token);
+      console.log('Login result:', result);
+
+      if (!result.success) {
+        setError(result.error || 'Inloggen mislukt');
+        setIsLoading(false);
+        return;
+      }
+
+      // Store session info in localStorage
+      localStorage.setItem('sessionId', result.sessionId!.toString());
+      localStorage.setItem('user', JSON.stringify(result.user));
+
+      // Redirect based on user type
+      const userType = result.user!.gebruikerType.typeNaam;
+      console.log('Redirecting user type:', userType);
+      
+      // Use globalThis.location for a hard redirect to prevent loop
+      if (userType === 'Admin') {
+        globalThis.location.href = '/admin';
+      } else if (userType === 'Balie') {
+        globalThis.location.href = '/counter';
+      } else if (userType === 'Student') {
+        globalThis.location.href = '/student';
+      } else {
+        globalThis.location.href = '/';
+      }
+    } catch (err) {
+      console.error('QR Login error:', err);
+      setShowQRScanner(false);
       setError('Er is een fout opgetreden. Probeer het opnieuw.');
       setIsLoading(false);
     }
@@ -93,31 +146,38 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="w-full max-w-[283px] flex flex-col items-center gap-9">
+        {/* Mobile: QR Code Option */}
+        <div className="flex items-center gap-2.5 lg:hidden">
+          <svg
+            className="w-14 h-14 flex-shrink-0"
+            viewBox="0 0 54 54"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.5 18.9H18.9V13.5H13.5V18.9ZM8.10001 12.15C8.10001 9.91407 9.91407 8.10001 12.15 8.10001H20.25C22.4859 8.10001 24.3 9.91407 24.3 12.15V20.25C24.3 22.4859 22.4859 24.3 20.25 24.3H12.15C9.91407 24.3 8.10001 22.4859 8.10001 20.25V12.15ZM13.5 40.5H18.9V35.1H13.5V40.5ZM8.10001 33.75C8.10001 31.5141 9.91407 29.7 12.15 29.7H20.25C22.4859 29.7 24.3 31.5141 24.3 33.75V41.85C24.3 44.0859 22.4859 45.9 20.25 45.9H12.15C9.91407 45.9 8.10001 44.0859 8.10001 41.85V33.75ZM35.1 13.5V18.9H40.5V13.5H35.1ZM33.75 8.10001H41.85C44.0859 8.10001 45.9 9.91407 45.9 12.15V20.25C45.9 22.4859 44.0859 24.3 41.85 24.3H33.75C31.5141 24.3 29.7 22.4859 29.7 20.25V12.15C29.7 9.91407 31.5141 8.10001 33.75 8.10001ZM32.4 35.1C30.9066 35.1 29.7 33.8934 29.7 32.4C29.7 30.9066 30.9066 29.7 32.4 29.7C33.8934 29.7 35.1 30.9066 35.1 32.4C35.1 33.8934 33.8934 35.1 32.4 35.1ZM32.4 40.5C33.8934 40.5 35.1 41.7066 35.1 43.2C35.1 44.6934 33.8934 45.9 32.4 45.9C30.9066 45.9 29.7 44.6934 29.7 43.2C29.7 41.7066 30.9066 40.5 32.4 40.5ZM40.5 43.2C40.5 41.7066 41.7066 40.5 43.2 40.5C44.6934 40.5 45.9 41.7066 45.9 43.2C45.9 44.6934 44.6934 45.9 43.2 45.9C41.7066 45.9 40.5 44.6934 40.5 43.2ZM43.2 35.1C41.7066 35.1 40.5 33.8934 40.5 32.4C40.5 30.9066 41.7066 29.7 43.2 29.7C44.6934 29.7 45.9 30.9066 45.9 32.4C45.9 33.8934 44.6934 35.1 43.2 35.1ZM40.5 37.8C40.5 39.2934 39.2934 40.5 37.8 40.5C36.3066 40.5 35.1 39.2934 35.1 37.8C35.1 36.3066 36.3066 35.1 37.8 35.1C39.2934 35.1 40.5 36.3066 40.5 37.8Z"
+              fill="white"
+            />
+          </svg>
+          <Button variant="primary" onClick={() => setShowQRScanner(true)}>Scan QR</Button>
+        </div>
+
+        {/* QR Scanner Modal */}
+        {showQRScanner && (
+          <QRScanner
+            onScan={handleQRScan}
+            onClose={() => setShowQRScanner(false)}
+          />
+        )}
+
+        {/* Desktop: Login Form */}
+        <form onSubmit={handleSubmit} className="hidden lg:flex w-full max-w-[283px] flex-col items-center gap-9">
           {/* Error Message */}
           {error && (
             <div className="w-full bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded">
               {error}
             </div>
           )}
-
-          {/* Mobile: QR Code Option */}
-          <div className="flex items-center gap-2.5 lg:hidden">
-            <svg
-              className="w-14 h-14 flex-shrink-0"
-              viewBox="0 0 54 54"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M13.5 18.9H18.9V13.5H13.5V18.9ZM8.10001 12.15C8.10001 9.91407 9.91407 8.10001 12.15 8.10001H20.25C22.4859 8.10001 24.3 9.91407 24.3 12.15V20.25C24.3 22.4859 22.4859 24.3 20.25 24.3H12.15C9.91407 24.3 8.10001 22.4859 8.10001 20.25V12.15ZM13.5 40.5H18.9V35.1H13.5V40.5ZM8.10001 33.75C8.10001 31.5141 9.91407 29.7 12.15 29.7H20.25C22.4859 29.7 24.3 31.5141 24.3 33.75V41.85C24.3 44.0859 22.4859 45.9 20.25 45.9H12.15C9.91407 45.9 8.10001 44.0859 8.10001 41.85V33.75ZM35.1 13.5V18.9H40.5V13.5H35.1ZM33.75 8.10001H41.85C44.0859 8.10001 45.9 9.91407 45.9 12.15V20.25C45.9 22.4859 44.0859 24.3 41.85 24.3H33.75C31.5141 24.3 29.7 22.4859 29.7 20.25V12.15C29.7 9.91407 31.5141 8.10001 33.75 8.10001ZM32.4 35.1C30.9066 35.1 29.7 33.8934 29.7 32.4C29.7 30.9066 30.9066 29.7 32.4 29.7C33.8934 29.7 35.1 30.9066 35.1 32.4C35.1 33.8934 33.8934 35.1 32.4 35.1ZM32.4 40.5C33.8934 40.5 35.1 41.7066 35.1 43.2C35.1 44.6934 33.8934 45.9 32.4 45.9C30.9066 45.9 29.7 44.6934 29.7 43.2C29.7 41.7066 30.9066 40.5 32.4 40.5ZM40.5 43.2C40.5 41.7066 41.7066 40.5 43.2 40.5C44.6934 40.5 45.9 41.7066 45.9 43.2C45.9 44.6934 44.6934 45.9 43.2 45.9C41.7066 45.9 40.5 44.6934 40.5 43.2ZM43.2 35.1C41.7066 35.1 40.5 33.8934 40.5 32.4C40.5 30.9066 41.7066 29.7 43.2 29.7C44.6934 29.7 45.9 30.9066 45.9 32.4C45.9 33.8934 44.6934 35.1 43.2 35.1ZM40.5 37.8C40.5 39.2934 39.2934 40.5 37.8 40.5C36.3066 40.5 35.1 39.2934 35.1 37.8C35.1 36.3066 36.3066 35.1 37.8 35.1C39.2934 35.1 40.5 36.3066 40.5 37.8Z"
-                fill="white"
-              />
-            </svg>
-            <Button variant="primary">Scan QR</Button>
-          </div>
-
-          <div className="text-white font-open-sans text-2xl font-normal lg:hidden">OR</div>
 
           {/* Login Fields */}
           <div className="w-full flex flex-col gap-2.5">

@@ -15,3 +15,19 @@ export const getGebruikers = cache(async () => {
     throw new Error('Failed to fetch gebruikers')
   }
 })
+
+// GET a specific gebruiker by ID
+export const getGebruikerById = cache(async (gebruikerId: number) => {
+  try {
+    const gebruiker = await prisma.gebruiker.findUnique({
+      where: { gebruikerId },
+      include: {
+        gebruikerType: true,
+      },
+    })
+    return gebruiker
+  } catch (error) {
+    console.error('Error fetching gebruiker:', error)
+    throw new Error('Failed to fetch gebruiker')
+  }
+})

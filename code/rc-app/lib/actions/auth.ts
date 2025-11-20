@@ -58,3 +58,61 @@ export async function loginAction(username: string, password: string) {
     return { success: false, error: 'Er is een fout opgetreden tijdens het inloggen' }
   }
 }
+
+export async function loginWithQRToken(token: string) {
+  try {
+    if (!token) {
+      return { success: false, error: 'Token is verplicht' }
+    }
+
+    // Find QR login token
+    const qrLogin = await prisma.qRLogin.findUnique({
+      where: { token },
+      include: {
+        gebruiker: {
+          include: { gebruikerType: true },
+        },
+      },
+    })
+
+    if (!qrLogin) {
+      return { success: false, error: 'Ongeldige of verlopen QR code' }
+    }
+
+    // Check if token is expired
+    if (qrLogin.vervalTijd < new Date()) {
+      return { success: false, error: 'QR code is verlopen' }
+    }
+
+    // Check if token was already used
+    if (qrLogin.isGebruiktTijd) {
+      return { success: false, error: 'QR code is al gebruikt' }
+    }
+
+    // Mark token as used
+    await prisma.qRLogin.update({
+      where: { qrLoginId: qrLogin.qrLoginId },
+      data: { isGebruiktTijd: new Date() },
+    })
+
+    // Create session
+    const session = await prisma.sessie.create({
+      data: {
+        gebruikerId: qrLogin.gebruikerId,
+        vervalTijd: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      },
+    })
+
+    // Return user info without password
+    const { wachtwoord, ...userWithoutPassword } = qrLogin.gebruiker
+
+    return {
+      success: true,
+      user: userWithoutPassword,
+      sessionId: session.sessieId,
+    }
+  } catch (error) {
+    console.error('QR Login error:', error)
+    return { success: false, error: 'Er is een fout opgetreden tijdens het inloggen' }
+  }
+}
