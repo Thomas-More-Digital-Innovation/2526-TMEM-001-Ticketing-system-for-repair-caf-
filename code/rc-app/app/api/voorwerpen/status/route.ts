@@ -8,7 +8,7 @@ export async function GET() {
         voorwerpStatus: true,
       },
       orderBy: {
-        aanmeldingsDuur: 'desc',
+        aanmeldingsDatum: 'desc',
       },
     })
 

@@ -12,7 +12,7 @@ export async function broadcastVoorwerpenUpdate() {
         voorwerpStatus: true,
       },
       orderBy: {
-        aanmeldingsDuur: 'desc',
+        aanmeldingsDatum: 'desc',
       },
     })
 

@@ -95,21 +95,21 @@ model Cafedagvoorwerp {
 }
 
 model Voorwerp {
-  voorwerpId          Int                  @id @default(autoincrement())
-  voorwerpNummer      String               @unique
-  klantId             Int
-  aanmeldingsDuur     DateTime
-  startingDuur        DateTime?
-  klaarDuur           DateTime?
-  klantProcedureNr    String?
-  voorwerpStatusId    Int
-  afdelingId          Int
-  beschrijving        String?
-  klant               Klant                @relation(fields: [klantId], references: [klantId])
-  voorwerpStatus      VoorwerpStatus       @relation(fields: [voorwerpStatusId], references: [voorwerpStatusId])
-  afdeling            Afdeling             @relation(fields: [afdelingId], references: [afdelingId])
-  cafedagVoorwerp     Cafedagvoorwerp[]
-  gebruikteMaterialen GebruikteMateriaal[]
+  voorwerpId           Int                  @id @default(autoincrement())
+  volgnummer           String               @unique
+  klantId              Int
+  aanmeldingsDatum     DateTime
+  aanmeldingsTijd      DateTime
+  klaarDuur            DateTime?
+  voorwerpStatusId     Int
+  afdelingId           Int
+  voorwerpBeschrijving String?
+  klachtBeschrijving   String?
+  klant                Klant                @relation(fields: [klantId], references: [klantId])
+  voorwerpStatus       VoorwerpStatus       @relation(fields: [voorwerpStatusId], references: [voorwerpStatusId])
+  afdeling             Afdeling             @relation(fields: [afdelingId], references: [afdelingId])
+  cafedagVoorwerp      Cafedagvoorwerp[]
+  gebruikteMaterialen  GebruikteMateriaal[]
 }
 
 model VoorwerpStatus {

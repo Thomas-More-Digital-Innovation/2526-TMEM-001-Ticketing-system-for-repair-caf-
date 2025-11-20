@@ -5,7 +5,7 @@ import { useSocket } from '@/lib/socket';
 
 interface Voorwerp {
   voorwerpId: number;
-  voorwerpNummer: string;
+  volgnummer: string;
   voorwerpStatus: {
     naam: string;
   };
@@ -87,7 +87,7 @@ export default function ClientView() {
                   className="w-full h-32 lg:h-44 flex items-center justify-center rounded-md bg-[#ED5028]"
                 >
                   <span className="text-white font-open-sans text-4xl font-normal">
-                    {item.voorwerpNummer}
+                    {item.volgnummer}
                   </span>
                 </div>
               ))
@@ -108,7 +108,7 @@ export default function ClientView() {
                   className="w-full h-32 lg:h-44 flex items-center justify-center rounded-md bg-[#ED5028]"
                 >
                   <span className="text-white font-open-sans text-4xl font-normal">
-                    {item.voorwerpNummer}
+                    {item.volgnummer}
                   </span>
                 </div>
               ))
@@ -129,7 +129,7 @@ export default function ClientView() {
                   className="w-full h-32 lg:h-44 flex items-center justify-center rounded-md bg-[#ED5028]"
                 >
                   <span className="text-white font-open-sans text-4xl font-normal">
-                    {item.voorwerpNummer}
+                    {item.volgnummer}
                   </span>
                 </div>
               ))

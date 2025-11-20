@@ -1,17 +1,17 @@
 import { notFound, redirect } from 'next/navigation';
-import { getVoorwerpByNummer } from '@/lib/data/voorwerpen';
+import { getVoorwerpByVolgnummer } from '@/lib/data/voorwerpen';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 import HandleVoorwerpClient from './HandleVoorwerpClient';
 
 export default async function HandleVoorwerpPage({
   params,
 }: {
-  params: Promise<{ voorwerpNummer: string }>;
+  params: Promise<{ volgnummer: string }>;
 }) {
-  const { voorwerpNummer } = await params;
+  const { volgnummer } = await params;
   
   // Fetch voorwerp data on server
-  const voorwerp = await getVoorwerpByNummer(voorwerpNummer);
+  const voorwerp = await getVoorwerpByVolgnummer(volgnummer);
 
   if (!voorwerp) {
     return redirect('/student');
@@ -19,7 +19,7 @@ export default async function HandleVoorwerpPage({
 
   return (
     <ProtectedRoute allowedRoles={['Admin', 'Student']}>
-      <HandleVoorwerpClient voorwerp={voorwerp} voorwerpNummer={voorwerpNummer} />
+      <HandleVoorwerpClient voorwerp={voorwerp} volgnummer={volgnummer} />
     </ProtectedRoute>
   );
 }

@@ -20,7 +20,7 @@ export const getVoorwerpen = cache(async () => {
         },
       },
       orderBy: {
-        aanmeldingsDuur: 'desc',
+        aanmeldingsDatum: 'desc',
       },
     })
     return voorwerpen
@@ -30,11 +30,11 @@ export const getVoorwerpen = cache(async () => {
   }
 })
 
-// GET single voorwerp by voorwerpNummer
-export const getVoorwerpByNummer = cache(async (voorwerpNummer: string) => {
+// GET single voorwerp by volgnummer
+export const getVoorwerpByVolgnummer = cache(async (volgnummer: string) => {
   try {
     const voorwerp = await prisma.voorwerp.findUnique({
-      where: { voorwerpNummer },
+      where: { volgnummer },
       include: {
         klant: {
           include: {
@@ -65,7 +65,7 @@ export const getVoorwerpenByStatus = cache(async () => {
         voorwerpStatus: true,
       },
       orderBy: {
-        aanmeldingsDuur: 'desc',
+        aanmeldingsDatum: 'desc',
       },
     })
 

@@ -4,23 +4,27 @@ import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
 interface CreateVoorwerpInput {
-  voorwerpNummer: string
+  volgnummer: string
   klantId: number
   voorwerpStatusId?: number
   afdelingId: number
-  beschrijving: string
+  voorwerpBeschrijving: string
+  klachtBeschrijving?: string
 }
 
 export async function createVoorwerp(data: CreateVoorwerpInput) {
   try {
+    const now = new Date()
     const voorwerp = await prisma.voorwerp.create({
       data: {
-        voorwerpNummer: data.voorwerpNummer,
+        volgnummer: data.volgnummer,
         klantId: data.klantId,
-        aanmeldingsDuur: new Date(),
+        aanmeldingsDatum: now,
+        aanmeldingsTijd: now,
         voorwerpStatusId: data.voorwerpStatusId || 1, // Default to "Geregistreerd"
         afdelingId: data.afdelingId,
-        beschrijving: data.beschrijving,
+        voorwerpBeschrijving: data.voorwerpBeschrijving,
+        klachtBeschrijving: data.klachtBeschrijving,
       },
       include: {
         klant: true,
@@ -40,14 +44,14 @@ export async function createVoorwerp(data: CreateVoorwerpInput) {
 }
 
 interface UpdateVoorwerpStatusInput {
-  voorwerpNummer: string
+  volgnummer: string
   voorwerpStatusId: number
 }
 
 export async function updateVoorwerpStatus(data: UpdateVoorwerpStatusInput) {
   try {
     const voorwerp = await prisma.voorwerp.update({
-      where: { voorwerpNummer: data.voorwerpNummer },
+      where: { volgnummer: data.volgnummer },
       data: { voorwerpStatusId: data.voorwerpStatusId },
       include: {
         klant: true,
@@ -121,19 +125,19 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
 
     // Generate unique 4-character tracking number (0-9 and A-Z)
     const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    let voorwerpNummer = ''
+    let volgnummer = ''
     let isUnique = false
     
     // Keep generating until we find a unique number
     while (!isUnique) {
-      voorwerpNummer = ''
+      volgnummer = ''
       for (let i = 0; i < 4; i++) {
-        voorwerpNummer += characters.charAt(Math.floor(Math.random() * characters.length))
+        volgnummer += characters.charAt(Math.floor(Math.random() * characters.length))
       }
       
       // Check if this number already exists
       const existing = await prisma.voorwerp.findUnique({
-        where: { voorwerpNummer }
+        where: { volgnummer }
       })
       
       if (!existing) {
@@ -158,14 +162,17 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
     }
 
     // Create the item
+    const now = new Date()
     const voorwerp = await prisma.voorwerp.create({
       data: {
-        voorwerpNummer,
+        volgnummer,
         klantId: klant.klantId,
-        aanmeldingsDuur: new Date(),
+        aanmeldingsDatum: now,
+        aanmeldingsTijd: now,
         voorwerpStatusId: geregistreerdStatus.voorwerpStatusId,
         afdelingId: afdelingId,
-        beschrijving: `${data.itemDescription}\n\nProbleem: ${data.problemDescription}`,
+        voorwerpBeschrijving: data.itemDescription,
+        klachtBeschrijving: data.problemDescription,
       },
       include: {
         klant: {
@@ -189,22 +196,22 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
     revalidatePath('/counter')
     revalidatePath('/admin/voorwerpen')
 
-    return { success: true, voorwerp, trackingNumber: voorwerpNummer }
+    return { success: true, voorwerp, trackingNumber: volgnummer }
   } catch (error) {
     console.error('Error registering item:', error)
     return { success: false, error: 'Er is een fout opgetreden bij het registreren' }
   }
 }
 
-export async function deliverVoorwerp(voorwerpNummer: string) {
+export async function deliverVoorwerp(volgnummer: string) {
   try {
-    if (!voorwerpNummer) {
+    if (!volgnummer) {
       return { success: false, error: 'Volgnummer is verplicht' }
     }
 
     // Find the item
     const voorwerp = await prisma.voorwerp.findUnique({
-      where: { voorwerpNummer },
+      where: { volgnummer },
       include: {
         klant: true,
         voorwerpStatus: true,
@@ -233,7 +240,7 @@ export async function deliverVoorwerp(voorwerpNummer: string) {
     }
 
     const updatedVoorwerp = await prisma.voorwerp.update({
-      where: { voorwerpNummer },
+      where: { volgnummer },
       data: {
         voorwerpStatusId: afgeleverdStatus.voorwerpStatusId,
         klaarDuur: new Date(),
@@ -263,10 +270,10 @@ export async function deliverVoorwerp(voorwerpNummer: string) {
   }
 }
 
-export async function updateVoorwerp(voorwerpNummer: string, data: any) {
+export async function updateVoorwerp(volgnummer: string, data: any) {
   try {
     const voorwerp = await prisma.voorwerp.update({
-      where: { voorwerpNummer },
+      where: { volgnummer },
       data: data,
       include: {
         klant: true,
