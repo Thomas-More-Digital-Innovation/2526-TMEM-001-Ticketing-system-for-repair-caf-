@@ -4,13 +4,6 @@ import prisma from '@/lib/prisma'
 export async function GET() {
   try {
     const voorwerpen = await prisma.voorwerp.findMany({
-    //   where: {
-    //     voorwerpStatus: {
-    //       naam: {
-    //         in: ['Afgeleverd', 'In behandeling', 'Klaar']
-    //       }
-    //     }
-    //   },
       include: {
         voorwerpStatus: true,
       },
@@ -21,9 +14,9 @@ export async function GET() {
 
     // Group items by status
     const grouped = {
-      afgeleverd: voorwerpen.filter(v => v.voorwerpStatus.naam === 'Geregistreerd'),
-      inBehandeling: voorwerpen.filter(v => v.voorwerpStatus.naam === 'In behandeling'),
-      klaar: voorwerpen.filter(v => v.voorwerpStatus.naam === 'Klaar'),
+      afgeleverd: voorwerpen.filter((v: any) => v.voorwerpStatus.naam === 'Geregistreerd'),
+      inBehandeling: voorwerpen.filter((v: any) => v.voorwerpStatus.naam === 'In behandeling'),
+      klaar: voorwerpen.filter((v: any) => v.voorwerpStatus.naam === 'Klaar'),
     }
 
     return NextResponse.json(grouped)

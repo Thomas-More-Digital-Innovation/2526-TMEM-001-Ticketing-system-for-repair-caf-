@@ -9,38 +9,22 @@ import ProtectedRoute from '../components/ProtectedRoute';
 export default function StudentPage() {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleScanQR = () => {
     console.log('Scanning QR code...');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
-
-    try {
-      // Keep API route for client-side validation
-      const response = await fetch(`/api/voorwerpen/${trackingNumber}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          setError('Voorwerp niet gevonden');
-        } else {
-          setError('Er is een fout opgetreden');
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      const voorwerp = await response.json();
-      router.push(`/student/handle/${trackingNumber}`);
-    } catch (err) {
-      setError('Er is een fout opgetreden');
-      setIsLoading(false);
+    
+    if (!trackingNumber.trim()) {
+      setError('Vul een volgnummer in');
+      return;
     }
+
+    // Navigate directly - let server component handle validation
+    router.push(`/student/handle/${trackingNumber}`);
   };
 
   return (
@@ -79,8 +63,8 @@ export default function StudentPage() {
           {error && (
             <div className="text-red-500 text-sm mt-2">{error}</div>
           )}
-          <Button variant="primary" type="submit" className="mt-2" disabled={isLoading}>
-            {isLoading ? 'Bezig...' : 'Voorwerp behandelen'}
+          <Button variant="primary" type="submit" className="mt-2">
+            Voorwerp behandelen
           </Button>
         </form>
       </div>

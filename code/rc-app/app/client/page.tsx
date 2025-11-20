@@ -29,7 +29,7 @@ export default function ClientView() {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        // Keep as API route since this is used for WebSocket updates
+        // Public endpoint for customer display
         const response = await fetch('/api/voorwerpen/status');
         const data = await response.json();
         setItems(data);

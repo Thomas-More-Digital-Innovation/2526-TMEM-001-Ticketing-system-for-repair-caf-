@@ -63,3 +63,13 @@ export function isBalie(): boolean {
 export function isStudent(): boolean {
   return getUserType() === 'Student';
 }
+
+export function getAuthHeaders(): HeadersInit {
+  const sessionId = getSession();
+  if (!sessionId) {
+    return {};
+  }
+  return {
+    'Authorization': `Bearer ${sessionId}`,
+  };
+}
