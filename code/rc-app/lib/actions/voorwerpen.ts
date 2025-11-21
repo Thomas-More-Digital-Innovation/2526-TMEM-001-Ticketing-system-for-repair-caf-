@@ -35,7 +35,7 @@ export async function createVoorwerp(data: CreateVoorwerpInput) {
 
     revalidatePath('/counter')
     revalidatePath('/admin/voorwerpen')
-    
+
     return { success: true, voorwerp }
   } catch (error) {
     console.error('Error creating voorwerp:', error)
@@ -71,7 +71,7 @@ export async function updateVoorwerpStatus(data: UpdateVoorwerpStatusInput) {
     revalidatePath('/student')
     revalidatePath('/counter')
     revalidatePath('/admin/voorwerpen')
-    
+
     return { success: true, voorwerp }
   } catch (error) {
     console.error('Error updating voorwerp status:', error)
@@ -127,19 +127,19 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
     const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     let volgnummer = ''
     let isUnique = false
-    
+
     // Keep generating until we find a unique number
     while (!isUnique) {
       volgnummer = ''
       for (let i = 0; i < 4; i++) {
         volgnummer += characters.charAt(Math.floor(Math.random() * characters.length))
       }
-      
+
       // Check if this number already exists
       const existing = await prisma.voorwerp.findUnique({
         where: { volgnummer }
       })
-      
+
       if (!existing) {
         isUnique = true
       }
@@ -203,7 +203,7 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
         klantTelefoon: voorwerp.klant.telNummer,
         afdelingNaam: voorwerp.afdeling.naam,
       })
-      
+
       if (printResult.success) {
         console.log('Print job created successfully')
       } else {
@@ -251,9 +251,9 @@ export async function getVoorwerpForDelivery(volgnummer: string) {
 
     // Check if item is ready for delivery (status should be "Klaar")
     if (voorwerp.voorwerpStatus.naam !== 'Klaar') {
-      return { 
-        success: false, 
-        error: `Voorwerp is nog niet klaar voor uitlevering. Status: ${voorwerp.voorwerpStatus.naam}` 
+      return {
+        success: false,
+        error: `Voorwerp is nog niet klaar voor uitlevering. Status: ${voorwerp.voorwerpStatus.naam}`
       }
     }
 
@@ -304,6 +304,45 @@ export async function confirmDelivery(volgnummer: string) {
       await broadcastVoorwerpenUpdate()
     } catch (error) {
       console.error('Error broadcasting update:', error)
+    }
+
+    // Send print job for delivery receipt to connected printer with payment details
+    try {
+      const { sendPrintJob } = await import('@/lib/printer-broadcast')
+
+      // Calculate payment details
+      const materials = updatedVoorwerp.gebruikteMaterialen.map(gm => ({
+        naam: gm.materiaal.naam,
+        aantal: gm.aantal,
+        prijs: gm.aantal, // Price equals amount in this system
+      }))
+
+      const subtotal = materials.reduce((sum, m) => sum + m.prijs, 0)
+
+      const printResult = await sendPrintJob({
+        voorwerpId: updatedVoorwerp.voorwerpId,
+        volgnummer: updatedVoorwerp.volgnummer,
+        klantNaam: updatedVoorwerp.klant.klantnaam,
+        klantTelefoon: updatedVoorwerp.klant.telNummer,
+        afdelingNaam: updatedVoorwerp.afdeling.naam,
+        printData: {
+          type: 'delivery',
+          voorwerpBeschrijving: updatedVoorwerp.voorwerpBeschrijving,
+          klachtBeschrijving: updatedVoorwerp.klachtBeschrijving,
+          materials,
+          subtotal,
+          totalPrice: subtotal,
+        },
+      })
+
+      if (printResult.success) {
+        console.log('Delivery receipt print job created successfully')
+      } else {
+        console.warn('Failed to create delivery receipt print job:', printResult.error)
+      }
+    } catch (error) {
+      console.error('Error creating delivery receipt print job:', error)
+      // Don't fail the delivery if print fails
     }
 
     revalidatePath('/counter')

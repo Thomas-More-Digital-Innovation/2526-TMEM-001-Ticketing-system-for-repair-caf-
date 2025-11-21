@@ -18,7 +18,7 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
   // Initialize Socket.IO server if not already done
   if (!globalThis.printerIo) {
     console.log('Setting up Printer Socket.IO server...')
-    
+
     const io = new Server(res.socket.server, {
       path: '/api/printer-socketio',
       addTrailingSlash: false,
@@ -27,23 +27,23 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
         methods: ['GET', 'POST'],
       },
     })
-    
+
     // Store printer connections
     const printerConnections = new Map<string, string>() // socketId -> printerNaam
-    
+
     io.on('connection', async (socket) => {
       console.log('Printer client connected:', socket.id)
-      
+
       // Register printer
       socket.on('register-printer', async (data: { printerNaam: string }) => {
         try {
           const { printerNaam } = data
-          
+
           if (!printerNaam) {
             socket.emit('error', { message: 'Printer naam is verplicht' })
             return
           }
-          
+
           // Update or create printer in database
           const printer = await prisma.printer.upsert({
             where: { printerNaam },
@@ -59,16 +59,16 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
               lastConnected: new Date(),
             },
           })
-          
+
           printerConnections.set(socket.id, printerNaam)
-          
-          socket.emit('printer-registered', { 
+
+          socket.emit('printer-registered', {
             printerId: printer.printerId,
-            printerNaam: printer.printerNaam 
+            printerNaam: printer.printerNaam
           })
-          
+
           console.log(`Printer registered: ${printerNaam} (ID: ${printer.printerId})`)
-          
+
           // Send pending print jobs for this printer
           const pendingJobs = await prisma.printJob.findMany({
             where: {
@@ -79,7 +79,7 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
               createdAt: 'asc',
             },
           })
-          
+
           if (pendingJobs.length > 0) {
             console.log(`Sending ${pendingJobs.length} pending jobs to ${printerNaam}`)
             for (const job of pendingJobs) {
@@ -89,12 +89,13 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
                 klantNaam: job.klantNaam,
                 klantTelefoon: job.klantTelefoon,
                 afdelingNaam: job.afdelingNaam,
+                printData: job.printData,
               })
-              
+
               // Update job status to sent
               await prisma.printJob.update({
                 where: { printJobId: job.printJobId },
-                data: { 
+                data: {
                   status: 'sent',
                   sentAt: new Date(),
                 },
@@ -106,17 +107,17 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
           socket.emit('error', { message: 'Fout bij registreren van printer' })
         }
       })
-      
+
       // Handle print job completion
       socket.on('print-completed', async (data: { printJobId: number }) => {
         try {
           const { printJobId } = data
-          
+
           if (!printJobId) {
             socket.emit('error', { message: 'Print job ID is verplicht' })
             return
           }
-          
+
           // Update print job status
           const updatedJob = await prisma.printJob.update({
             where: { printJobId },
@@ -125,14 +126,14 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
               completedAt: new Date(),
             },
           })
-          
-          socket.emit('print-ack', { 
+
+          socket.emit('print-ack', {
             printJobId,
-            status: 'completed' 
+            status: 'completed'
           })
-          
+
           console.log(`Print job ${printJobId} completed`)
-          
+
           // Notify all connected clients about the completion
           io.emit('print-status-update', {
             printJobId,
@@ -144,17 +145,17 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
           socket.emit('error', { message: 'Fout bij markeren als voltooid' })
         }
       })
-      
+
       // Handle print job failure
       socket.on('print-failed', async (data: { printJobId: number; errorMessage?: string }) => {
         try {
           const { printJobId, errorMessage } = data
-          
+
           if (!printJobId) {
             socket.emit('error', { message: 'Print job ID is verplicht' })
             return
           }
-          
+
           // Update print job status
           const updatedJob = await prisma.printJob.update({
             where: { printJobId },
@@ -163,14 +164,14 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
               errorMessage: errorMessage || 'Onbekende fout',
             },
           })
-          
-          socket.emit('print-ack', { 
+
+          socket.emit('print-ack', {
             printJobId,
-            status: 'failed' 
+            status: 'failed'
           })
-          
+
           console.log(`Print job ${printJobId} failed: ${errorMessage}`)
-          
+
           // Notify all connected clients about the failure
           io.emit('print-status-update', {
             printJobId,
@@ -183,13 +184,13 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
           socket.emit('error', { message: 'Fout bij markeren als mislukt' })
         }
       })
-      
+
       // Handle disconnection
       socket.on('disconnect', async () => {
         console.log('Printer client disconnected:', socket.id)
-        
+
         const printerNaam = printerConnections.get(socket.id)
-        
+
         if (printerNaam) {
           try {
             // Update printer status in database
@@ -200,7 +201,7 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
                 socketId: null,
               },
             })
-            
+
             printerConnections.delete(socket.id)
             console.log(`Printer disconnected: ${printerNaam}`)
           } catch (error) {
@@ -209,12 +210,12 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
         }
       })
     })
-    
+
     globalThis.printerIo = io
-    
+
     console.log('Printer Socket.IO server setup complete')
   }
-  
+
   // Let Socket.IO engine handle the request
   if (globalThis.printerIo) {
     // @ts-ignore - Socket.IO engine handles HTTP requests internally

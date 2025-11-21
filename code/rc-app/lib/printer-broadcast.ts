@@ -11,33 +11,35 @@ export async function sendPrintJob(data: {
   klantNaam: string
   klantTelefoon?: string | null
   afdelingNaam: string
+  printData?: any // Additional JSON data (e.g., payment details, materials)
 }) {
   try {
     // Get first available connected printer
     const connectedPrinters = await getConnectedPrinters()
-    
+
     if (connectedPrinters.length === 0) {
       console.warn('No connected printers available')
       return { success: false, error: 'Geen verbonden printers beschikbaar' }
     }
-    
+
     // Use the first available printer
     const printer = connectedPrinters[0]
-    
+
     // Create print job in database
     const result = await createPrintJob({
       printerId: printer.printerId,
       voorwerpId: data.voorwerpId,
       volgnummer: data.volgnummer,
       klantNaam: data.klantNaam,
-      klantTelefoon: data.klantTelefoon,
+      klantTelefoon: data.klantTelefoon || undefined,
       afdelingNaam: data.afdelingNaam,
+      printData: data.printData,
     })
-    
+
     if (!result.success) {
       return result
     }
-    
+
     // Send to printer via WebSocket if connected
     if (printer.socketId && globalThis.printerIo) {
       try {
@@ -47,12 +49,13 @@ export async function sendPrintJob(data: {
           klantNaam: data.klantNaam,
           klantTelefoon: data.klantTelefoon,
           afdelingNaam: data.afdelingNaam,
+          printData: data.printData,
         })
-        
+
         // Update status to sent
         const { updatePrintJobStatus } = await import('@/lib/data/printers')
         await updatePrintJobStatus(result.printJob.printJobId, 'sent')
-        
+
         console.log(`Print job ${result.printJob.printJobId} sent to printer ${printer.printerNaam}`)
       } catch (emitError) {
         console.error('Error emitting print job to socket:', emitError)
@@ -61,7 +64,7 @@ export async function sendPrintJob(data: {
     } else {
       console.warn(`Printer ${printer.printerNaam} not connected - job will be sent on reconnect`)
     }
-    
+
     return { success: true, printJob: result.printJob, printer }
   } catch (error) {
     console.error('Error sending print job:', error)
@@ -78,17 +81,18 @@ export async function broadcastPrintJob(data: {
   klantNaam: string
   klantTelefoon?: string | null
   afdelingNaam: string
+  printData?: any // Additional JSON data (e.g., payment details, materials)
 }) {
   try {
     const connectedPrinters = await getConnectedPrinters()
-    
+
     if (connectedPrinters.length === 0) {
       console.warn('No connected printers available')
       return { success: false, error: 'Geen verbonden printers beschikbaar' }
     }
-    
+
     const printJobs = []
-    
+
     // Create a print job for each connected printer
     for (const printer of connectedPrinters) {
       const result = await createPrintJob({
@@ -96,13 +100,14 @@ export async function broadcastPrintJob(data: {
         voorwerpId: data.voorwerpId,
         volgnummer: data.volgnummer,
         klantNaam: data.klantNaam,
-        klantTelefoon: data.klantTelefoon,
+        klantTelefoon: data.klantTelefoon || undefined,
         afdelingNaam: data.afdelingNaam,
+        printData: data.printData,
       })
-      
+
       if (result.success) {
         printJobs.push(result.printJob)
-        
+
         // Send to printer via WebSocket if connected
         if (printer.socketId && globalThis.printerIo) {
           try {
@@ -112,8 +117,9 @@ export async function broadcastPrintJob(data: {
               klantNaam: data.klantNaam,
               klantTelefoon: data.klantTelefoon,
               afdelingNaam: data.afdelingNaam,
+              printData: data.printData,
             })
-            
+
             // Update status to sent
             const { updatePrintJobStatus } = await import('@/lib/data/printers')
             await updatePrintJobStatus(result.printJob.printJobId, 'sent')
@@ -123,9 +129,9 @@ export async function broadcastPrintJob(data: {
         }
       }
     }
-    
+
     console.log(`Broadcast ${printJobs.length} print jobs to ${connectedPrinters.length} printers`)
-    
+
     return { success: true, printJobs, printerCount: connectedPrinters.length }
   } catch (error) {
     console.error('Error broadcasting print job:', error)

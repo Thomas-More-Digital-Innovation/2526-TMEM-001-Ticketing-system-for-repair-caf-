@@ -157,6 +157,7 @@ model PrintJob {
   klantNaam      String
   klantTelefoon  String?
   afdelingNaam   String
+  printData      Json?     // Additional JSON data for flexible print content (e.g., payment details)
   status         String    @default("pending") // pending, sent, completed, failed
   createdAt      DateTime  @default(now())
   sentAt         DateTime?

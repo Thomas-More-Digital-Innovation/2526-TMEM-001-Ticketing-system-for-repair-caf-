@@ -91,7 +91,7 @@ export default function MaterialenSelectieClient({ materialen, volgnummer }: Mat
       <div className="mb-8">
         {filteredMaterialen.map((materiaal) => {
           const aantal = selectedMaterialen.get(materiaal.materiaalId) || 0;
-          
+
           return (
             <div
               key={materiaal.materiaalId}
@@ -134,7 +134,7 @@ export default function MaterialenSelectieClient({ materialen, volgnummer }: Mat
 
       {/* Bottom Action Button */}
       {Array.from(selectedMaterialen.values()).some(aantal => aantal > 0) && (
-        <div className="fixed bottom-6 left-0 right-0 flex justify-center">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex justify-center">
           <Button
             variant="primary"
             onClick={handleAddMaterials}

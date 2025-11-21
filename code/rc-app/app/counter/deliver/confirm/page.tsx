@@ -24,6 +24,7 @@ export default function DeliverConfirmPage() {
   const router = useRouter();
   const [voorwerp, setVoorwerp] = useState<VoorwerpData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [printSent, setPrintSent] = useState(false);
 
   useEffect(() => {
     // Retrieve the item data from localStorage
@@ -36,22 +37,38 @@ export default function DeliverConfirmPage() {
     }
   }, [router]);
 
-  const handleBetaald = async () => {
+  // Send print job when component mounts
+  useEffect(() => {
+    if (voorwerp && !printSent) {
+      handlePrint();
+      setPrintSent(true);
+    }
+  }, [voorwerp, printSent]);
+
+  const handlePrint = async () => {
     if (!voorwerp) return;
-    
-    setIsLoading(true);
-    
+
     try {
-      // Confirm the delivery and update status to "Afgeleverd"
+      // Call confirmDelivery which will handle the print job
       const result = await confirmDelivery(voorwerp.volgnummer);
 
       if (!result.success) {
-        console.error('Error confirming delivery:', result.error);
+        console.error('Error sending print job:', result.error);
       }
+    } catch (error) {
+      console.error('Error in handlePrint:', error);
+    }
+  };
 
+  const handleBetaald = async () => {
+    if (!voorwerp) return;
+
+    setIsLoading(true);
+
+    try {
       // Clear localStorage before redirecting
       localStorage.removeItem('deliveredItem');
-      
+
       // Redirect back to counter dashboard
       router.push('/counter');
     } catch (error) {
@@ -142,8 +159,8 @@ export default function DeliverConfirmPage() {
           </div>
 
           {/* Betaald Button */}
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             onClick={handleBetaald}
             className="px-12 py-6 text-3xl"
             disabled={isLoading}

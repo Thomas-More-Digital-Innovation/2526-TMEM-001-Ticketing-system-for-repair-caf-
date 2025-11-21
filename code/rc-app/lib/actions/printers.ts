@@ -20,7 +20,7 @@ export async function getAllPrinters() {
         },
       },
     })
-    
+
     return { success: true, printers }
   } catch (error) {
     console.error('Error fetching printers:', error)
@@ -44,11 +44,11 @@ export async function getPrinterById(printerId: number) {
         },
       },
     })
-    
+
     if (!printer) {
       return { success: false, error: 'Printer niet gevonden' }
     }
-    
+
     return { success: true, printer }
   } catch (error) {
     console.error('Error fetching printer:', error)
@@ -69,7 +69,7 @@ export async function getConnectedPrinters() {
         printerNaam: 'asc',
       },
     })
-    
+
     return { success: true, printers }
   } catch (error) {
     console.error('Error fetching connected printers:', error)
@@ -87,6 +87,7 @@ export async function createPrintJob(data: {
   klantNaam: string
   klantTelefoon?: string
   afdelingNaam: string
+  printData?: any // Additional JSON data (e.g., payment details, materials)
 }) {
   try {
     const printJob = await prisma.printJob.create({
@@ -97,12 +98,13 @@ export async function createPrintJob(data: {
         klantNaam: data.klantNaam,
         klantTelefoon: data.klantTelefoon || null,
         afdelingNaam: data.afdelingNaam,
+        printData: data.printData || null,
         status: 'pending',
       },
     })
-    
+
     revalidatePath('/admin/statistieken')
-    
+
     return { success: true, printJob }
   } catch (error) {
     console.error('Error creating print job:', error)
@@ -120,15 +122,15 @@ export async function getPrintJobs(filters?: {
 }) {
   try {
     const where: any = {}
-    
+
     if (filters?.printerId) {
       where.printerId = filters.printerId
     }
-    
+
     if (filters?.status) {
       where.status = filters.status
     }
-    
+
     const printJobs = await prisma.printJob.findMany({
       where,
       orderBy: {
@@ -139,7 +141,7 @@ export async function getPrintJobs(filters?: {
         printer: true,
       },
     })
-    
+
     return { success: true, printJobs }
   } catch (error) {
     console.error('Error fetching print jobs:', error)
@@ -153,15 +155,15 @@ export async function getPrintJobs(filters?: {
 export async function getPendingPrintJobsCount(printerId?: number) {
   try {
     const where: any = { status: 'pending' }
-    
+
     if (printerId) {
       where.printerId = printerId
     }
-    
+
     const count = await prisma.printJob.count({
       where,
     })
-    
+
     return { success: true, count }
   } catch (error) {
     console.error('Error counting pending print jobs:', error)
@@ -176,7 +178,7 @@ export async function deleteOldPrintJobs(daysOld: number = 30) {
   try {
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - daysOld)
-    
+
     const result = await prisma.printJob.deleteMany({
       where: {
         status: 'completed',
@@ -185,13 +187,13 @@ export async function deleteOldPrintJobs(daysOld: number = 30) {
         },
       },
     })
-    
+
     revalidatePath('/admin/statistieken')
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       deletedCount: result.count,
-      message: `${result.count} oude printjobs verwijderd` 
+      message: `${result.count} oude printjobs verwijderd`
     }
   } catch (error) {
     console.error('Error deleting old print jobs:', error)
@@ -213,9 +215,9 @@ export async function retryPrintJob(printJobId: number) {
         errorMessage: null,
       },
     })
-    
+
     revalidatePath('/admin/statistieken')
-    
+
     return { success: true, printJob }
   } catch (error) {
     console.error('Error retrying print job:', error)

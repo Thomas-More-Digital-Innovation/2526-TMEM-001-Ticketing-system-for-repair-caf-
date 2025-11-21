@@ -123,7 +123,8 @@ class PrinterClient:
             'volgnummer': str,
             'klantNaam': str,
             'klantTelefoon': str | None,
-            'afdelingNaam': str
+            'afdelingNaam': str,
+            'printData': dict | None  # Additional JSON data
         }
         """
         print_job_id = data.get('printJobId')
@@ -131,6 +132,7 @@ class PrinterClient:
         klant_naam = data.get('klantNaam')
         klant_telefoon = data.get('klantTelefoon')
         afdeling_naam = data.get('afdelingNaam')
+        print_data = data.get('printData')  # Extract printData
         
         logger.info('='*60)
         logger.info(f'PRINT JOB #{print_job_id}')
@@ -139,12 +141,21 @@ class PrinterClient:
         logger.info(f'Klant:         {klant_naam}')
         logger.info(f'Telefoon:      {klant_telefoon or "N/A"}')
         logger.info(f'Afdeling:      {afdeling_naam}')
+        
+        # Log print data if available
+        if print_data:
+            logger.info(f'Type:          {print_data.get("type", "standard")}')
+            if print_data.get('materials'):
+                logger.info(f'Materials:     {len(print_data["materials"])} items')
+            if print_data.get('totalPrice') is not None:
+                logger.info(f'Total:         €{print_data["totalPrice"]:.2f}')
+        
         logger.info('='*60)
         
         # Simulate printing process
         try:
-            # TODO: Replace with actual printer logic
-            self._print_ticket(volgnummer, klant_naam, klant_telefoon, afdeling_naam)
+            # Pass print_data to the print function
+            self._print_ticket(volgnummer, klant_naam, klant_telefoon, afdeling_naam, print_data)
             
             # Notify server of successful print
             self.sio.emit('print-completed', {'printJobId': print_job_id})
@@ -160,9 +171,17 @@ class PrinterClient:
             })
     
     def _print_ticket(self, volgnummer: str, klant_naam: str, 
-                      klant_telefoon: str | None, afdeling_naam: str):
+                      klant_telefoon: str | None, afdeling_naam: str,
+                      print_data: Dict[str, Any] | None = None):
         """
         Print the ticket
+        
+        Args:
+            volgnummer: Tracking number
+            klant_naam: Customer name
+            klant_telefoon: Customer phone
+            afdeling_naam: Department name
+            print_data: Additional print data (materials, prices, etc.)
         
         TODO: Implement actual printer logic here
         This is a placeholder that simulates printing
@@ -170,8 +189,49 @@ class PrinterClient:
         # Simulate print delay
         time.sleep(1)
         
-        # Example: Print to console (replace with actual printer code)
-        ticket = f"""
+        # Check if this is a delivery receipt with payment details
+        if print_data and print_data.get('type') == 'delivery':
+            # Print delivery receipt with payment details
+            ticket = f"""
+╔════════════════════════════════════════╗
+║   REPAIR CAFÉ - DELIVERY RECEIPT       ║
+╠════════════════════════════════════════╣
+║                                        ║
+║  Volgnummer:  {volgnummer:<23}  ║
+║                                        ║
+║  Klant:       {klant_naam:<23}  ║
+║  Telefoon:    {(klant_telefoon or 'N/A'):<23}  ║
+║  Afdeling:    {afdeling_naam:<23}  ║
+║                                        ║
+╠════════════════════════════════════════╣
+║  GEBRUIKTE MATERIALEN                  ║
+╠════════════════════════════════════════╣
+"""
+            
+            # Add materials if present
+            materials = print_data.get('materials', [])
+            if materials:
+                for material in materials:
+                    naam = material.get('naam', 'Unknown')[:20]
+                    aantal = material.get('aantal', 0)
+                    prijs = material.get('prijs', 0)
+                    ticket += f"║  {naam:<20} {aantal:>3}x €{prijs:>6.2f} ║\n"
+            else:
+                ticket += "║  Geen materialen gebruikt             ║\n"
+            
+            ticket += "╠════════════════════════════════════════╣\n"
+            
+            # Add total
+            subtotal = print_data.get('subtotal', 0)
+            total_price = print_data.get('totalPrice', subtotal)
+            ticket += f"║  SUBTOTAAL:              €{subtotal:>9.2f}  ║\n"
+            ticket += f"║  TOTAAL:                 €{total_price:>9.2f}  ║\n"
+            ticket += "║                                        ║\n"
+            ticket += "╚════════════════════════════════════════╝\n"
+            
+        else:
+            # Print standard registration ticket
+            ticket = f"""
 ╔════════════════════════════════════════╗
 ║     REPAIR CAFÉ - TICKET               ║
 ╠════════════════════════════════════════╣
@@ -184,6 +244,7 @@ class PrinterClient:
 ║                                        ║
 ╚════════════════════════════════════════╝
         """
+        
         print(ticket)
         
         # TODO: Add your printer implementation here

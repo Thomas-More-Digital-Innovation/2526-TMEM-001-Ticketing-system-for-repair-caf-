@@ -22,6 +22,18 @@ export interface PrintJobData {
   klantNaam: string
   klantTelefoon?: string | null
   afdelingNaam: string
+  printData?: {
+    type?: 'registration' | 'delivery'
+    voorwerpBeschrijving?: string
+    klachtBeschrijving?: string
+    materials?: Array<{
+      naam: string
+      aantal: number
+      prijs: number
+    }>
+    subtotal?: number
+    totalPrice?: number
+  } | null
 }
 
 export interface PrinterRegistrationData {
