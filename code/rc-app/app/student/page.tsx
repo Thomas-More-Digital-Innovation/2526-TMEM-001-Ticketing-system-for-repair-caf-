@@ -5,14 +5,27 @@ import { useRouter } from 'next/navigation';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import ProtectedRoute from '../components/ProtectedRoute';
+import QRScanner from '../components/QRScanner';
 
 export default function StudentPage() {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [error, setError] = useState('');
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const router = useRouter();
 
   const handleScanQR = () => {
-    console.log('Scanning QR code...');
+    setShowQRScanner(true);
+  };
+
+  const handleQRScan = (data: string) => {
+    console.log('QR code scanned:', data);
+    setShowQRScanner(false);
+    // Navigate to the scanned tracking number
+    router.push(`/student/handle/${data}`);
+  };
+
+  const handleCloseQRScanner = () => {
+    setShowQRScanner(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -69,6 +82,10 @@ export default function StudentPage() {
         </form>
       </div>
     </div>
+
+    {showQRScanner && (
+      <QRScanner onScan={handleQRScan} onClose={handleCloseQRScanner} />
+    )}
     </ProtectedRoute>
   );
 }

@@ -149,31 +149,55 @@ async function main() {
   console.log('Created voorwerp statuses:', { geregistreerd, inBehandeling, klaar, afgeleverd })
 
   // Seed Materiaal
-  const soldeerbout = await prisma.materiaal.upsert({
+  const boutM5 = await prisma.materiaal.upsert({
     where: { materiaalId: 1 },
-    update: {},
+    update: { naam: 'Bout M5' },
     create: {
-      naam: 'Soldeerbout',
+      naam: 'Bout M5',
+    },
+  })
+
+  const boutM6 = await prisma.materiaal.upsert({
+    where: { materiaalId: 2 },
+    update: { naam: 'Bout M6' },
+    create: {
+      naam: 'Bout M6',
+    },
+  })
+
+  const schroef = await prisma.materiaal.upsert({
+    where: { materiaalId: 3 },
+    update: { naam: 'Schroef' },
+    create: {
+      naam: 'Schroef',
+    },
+  })
+
+  const bout = await prisma.materiaal.upsert({
+    where: { materiaalId: 4 },
+    update: { naam: 'Bout' },
+    create: {
+      naam: 'Bout',
     },
   })
 
   const draad = await prisma.materiaal.upsert({
-    where: { materiaalId: 2 },
-    update: {},
+    where: { materiaalId: 5 },
+    update: { naam: 'Draad' },
     create: {
       naam: 'Draad',
     },
   })
 
   const lijm = await prisma.materiaal.upsert({
-    where: { materiaalId: 3 },
-    update: {},
+    where: { materiaalId: 6 },
+    update: { naam: 'Lijm' },
     create: {
       naam: 'Lijm',
     },
   })
 
-  console.log('Created materialen:', { soldeerbout, draad, lijm })
+  console.log('Created materialen:', { boutM5, boutM6, schroef, bout, draad, lijm })
 
   // Seed Cafe
   const repaircafe = await prisma.cafe.upsert({

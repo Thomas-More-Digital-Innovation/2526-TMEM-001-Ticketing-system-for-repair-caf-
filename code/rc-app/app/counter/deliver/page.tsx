@@ -6,7 +6,7 @@ import BackButton from '../../components/BackButton';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import ProtectedRoute from '../../components/ProtectedRoute';
-import { deliverVoorwerp } from '@/lib/actions/voorwerpen';
+import { getVoorwerpForDelivery } from '@/lib/actions/voorwerpen';
 
 export default function DeliverItemPage() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function DeliverItemPage() {
     setIsLoading(true);
 
     try {
-      const result = await deliverVoorwerp(trackingNumber);
+      const result = await getVoorwerpForDelivery(trackingNumber);
 
       if (!result.success) {
         setError(result.error || 'Er is een fout opgetreden');
@@ -28,9 +28,9 @@ export default function DeliverItemPage() {
         return;
       }
 
-      // Success - redirect with the item data
+      // Success - redirect to confirmation page with the item data
       localStorage.setItem('deliveredItem', JSON.stringify(result.voorwerp));
-      router.push('/counter');
+      router.push('/counter/deliver/confirm');
     } catch (err) {
       console.error('Deliver error:', err);
       setError('Er is een fout opgetreden. Probeer het opnieuw.');
@@ -39,7 +39,7 @@ export default function DeliverItemPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={['Admin', 'Balie']}>
+    <ProtectedRoute allowedRoles={['Balie']}>
       <div className="min-h-screen bg-[#03091C] flex flex-col p-2.5 lg:p-5">
         {/* Header */}
         <div className="flex items-center justify-between p-2.5 mb-5">
@@ -62,7 +62,7 @@ export default function DeliverItemPage() {
           <div className="w-full max-w-sm">
             <Input
               label="Volgnummer"
-              placeholder="RC-..."
+              placeholder="H78K"
               required
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}

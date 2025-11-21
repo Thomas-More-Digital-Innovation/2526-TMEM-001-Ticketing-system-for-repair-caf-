@@ -27,8 +27,7 @@ export default function HandleVoorwerpClient({ voorwerp, volgnummer }: HandleVoo
   }, [voorwerp.voorwerpStatusId, volgnummer]);
 
   const handleUseMaterial = () => {
-    // TODO: Navigate to material selection page
-    console.log('Navigate to material selection');
+    router.push(`/student/handle/${volgnummer}/materialen`);
   };
 
   const handleReturn = () => {
@@ -63,6 +62,7 @@ export default function HandleVoorwerpClient({ voorwerp, volgnummer }: HandleVoo
             onChange={(e) => setKlachtBeschrijving(e.target.value)}
             placeholder="Het apparaat is kapot"
             className="w-full h-32 bg-white text-black p-4 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-[#ED5028]"
+            disabled
           />
         </div>
 
@@ -74,17 +74,16 @@ export default function HandleVoorwerpClient({ voorwerp, volgnummer }: HandleVoo
             onChange={(e) => setVoorwerpBeschrijving(e.target.value)}
             placeholder="Omschrijving van de voorwerpreparaten"
             className="w-full h-32 bg-white text-black p-4 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-[#ED5028]"
+            disabled
           />
         </div>
 
         {/* Gebruikte Materialen Section */}
         <div className="bg-[#0A1532] p-6 rounded-md">
-          <div className="flex justify-between items-center mb-4">
-            <Button variant="secondary" onClick={handleUseMaterial}>
-              Gebruikte Materiaal
-            </Button>
-            <Button variant="primary" onClick={handleReturn}>
-              Terugleggen
+          <div className="flex justify-center gap-5 items-center mb-4">
+            <h1>Gebruikte Materialen</h1>
+            <Button variant="primary" onClick={handleUseMaterial}>
+              Toevoegen
             </Button>
           </div>
 

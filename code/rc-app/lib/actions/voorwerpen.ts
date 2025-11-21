@@ -203,7 +203,7 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
   }
 }
 
-export async function deliverVoorwerp(volgnummer: string) {
+export async function getVoorwerpForDelivery(volgnummer: string) {
   try {
     if (!volgnummer) {
       return { success: false, error: 'Volgnummer is verplicht' }
@@ -215,6 +215,12 @@ export async function deliverVoorwerp(volgnummer: string) {
       include: {
         klant: true,
         voorwerpStatus: true,
+        afdeling: true,
+        gebruikteMaterialen: {
+          include: {
+            materiaal: true,
+          },
+        },
       },
     })
 
@@ -230,7 +236,20 @@ export async function deliverVoorwerp(volgnummer: string) {
       }
     }
 
-    // Update status to "Afgeleverd" (delivered)
+    return { success: true, voorwerp }
+  } catch (error) {
+    console.error('Error fetching item for delivery:', error)
+    return { success: false, error: 'Er is een fout opgetreden bij het ophalen van het voorwerp' }
+  }
+}
+
+export async function confirmDelivery(volgnummer: string) {
+  try {
+    if (!volgnummer) {
+      return { success: false, error: 'Volgnummer is verplicht' }
+    }
+
+    // Find the "Afgeleverd" status
     const afgeleverdStatus = await prisma.voorwerpStatus.findFirst({
       where: { naam: 'Afgeleverd' },
     })
@@ -239,6 +258,7 @@ export async function deliverVoorwerp(volgnummer: string) {
       return { success: false, error: 'Status "Afgeleverd" niet gevonden in database' }
     }
 
+    // Update status to "Afgeleverd" (delivered)
     const updatedVoorwerp = await prisma.voorwerp.update({
       where: { volgnummer },
       data: {
@@ -249,6 +269,11 @@ export async function deliverVoorwerp(volgnummer: string) {
         klant: true,
         voorwerpStatus: true,
         afdeling: true,
+        gebruikteMaterialen: {
+          include: {
+            materiaal: true,
+          },
+        },
       },
     })
 
@@ -265,8 +290,8 @@ export async function deliverVoorwerp(volgnummer: string) {
 
     return { success: true, voorwerp: updatedVoorwerp }
   } catch (error) {
-    console.error('Error delivering item:', error)
-    return { success: false, error: 'Er is een fout opgetreden bij het uitleveren' }
+    console.error('Error confirming delivery:', error)
+    return { success: false, error: 'Er is een fout opgetreden bij het bevestigen van de levering' }
   }
 }
 
