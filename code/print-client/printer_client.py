@@ -13,6 +13,8 @@ from typing import Dict, Any
 from dotenv import load_dotenv
 import socketio
 import urllib3
+import signal
+import threading
 
 # Load environment variables
 load_dotenv()
@@ -269,6 +271,7 @@ class PrinterClient:
         except KeyboardInterrupt:
             logger.info('Keyboard interrupt received')
             self.disconnect()
+            sys.exit(0)  # Ensure clean exit
 
 
 def main():
@@ -280,14 +283,22 @@ def main():
     logger.info(f'Printer Name: {PRINTER_NAME}')
     logger.info(f'SSL Verify: {SSL_VERIFY}')
     logger.info('='*60)
-    
+
     # Create and start the printer client
     client = PrinterClient(SOCKETIO_URL, PRINTER_NAME, SSL_VERIFY)
-    
+
     try:
         client.connect()
         logger.info('Printer client running. Press Ctrl+C to exit.')
-        client.wait()
+
+        # Run the wait method in a separate thread
+        wait_thread = threading.Thread(target=client.wait, daemon=True)
+        wait_thread.start()
+
+        # Keep the main thread alive to listen for KeyboardInterrupt
+        while wait_thread.is_alive():
+            wait_thread.join(timeout=1)
+
     except KeyboardInterrupt:
         logger.info('Shutting down...')
     except Exception as e:
@@ -299,4 +310,12 @@ def main():
 
 
 if __name__ == '__main__':
+    # Signal handler for clean exit on Ctrl+C
+    def handle_sigint(signal_received, frame):
+        logger.info('SIGINT received. Shutting down...')
+        sys.exit(0)
+
+    # Register the signal handler
+    signal.signal(signal.SIGINT, handle_sigint)
+
     main()
