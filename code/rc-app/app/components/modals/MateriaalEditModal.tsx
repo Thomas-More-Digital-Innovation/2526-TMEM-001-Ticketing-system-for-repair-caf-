@@ -83,16 +83,16 @@ export default function MateriaalEditModal({
         <div className="flex items-center gap-2.5">
           {photoPreview && (
             <div className="w-22 h-15 rounded overflow-hidden bg-gray-200">
-              <img 
-                src={photoPreview} 
-                alt="Preview" 
+              <img
+                src={photoPreview}
+                alt="Preview"
                 className="w-full h-full object-cover"
               />
             </div>
           )}
           <label className="cursor-pointer flex items-center justify-center w-15 h-15 rounded bg-transparent hover:bg-white/10 transition-colors">
             <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M27.5 40V19.625L21 26.125L17.5 22.5L30 10L42.5 22.5L39 26.125L32.5 19.625V40H27.5ZM15 50C13.625 50 12.4483 49.5108 11.47 48.5325C10.4917 47.5542 10.0017 46.3767 10 45V37.5H15V45H45V37.5H50V45C50 46.375 49.5108 47.5525 48.5325 48.5325C47.5542 49.5125 46.3767 50.0017 45 50H15Z" fill="white"/>
+              <path d="M27.5 40V19.625L21 26.125L17.5 22.5L30 10L42.5 22.5L39 26.125L32.5 19.625V40H27.5ZM15 50C13.625 50 12.4483 49.5108 11.47 48.5325C10.4917 47.5542 10.0017 46.3767 10 45V37.5H15V45H45V37.5H50V45C50 46.375 49.5108 47.5525 48.5325 48.5325C47.5542 49.5125 46.3767 50.0017 45 50H15Z" fill="white" />
             </svg>
             <input
               type="file"

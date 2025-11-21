@@ -161,8 +161,23 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
       afdelingId = defaultAfdeling?.afdelingId || 1
     }
 
-    // Create the item
+    // Find active cafedag (current date is between start and end)
     const now = new Date()
+    const activeCafedag = await prisma.cafedag.findFirst({
+      where: {
+        startDatum: { lte: now },
+        eindDatum: { gte: now },
+      },
+    })
+
+    if (!activeCafedag) {
+      return { 
+        success: false, 
+        error: 'Er is geen actieve cafedag. Voorwerpen kunnen alleen geregistreerd worden tijdens een actieve cafedag.' 
+      }
+    }
+
+    // Create the item
     const voorwerp = await prisma.voorwerp.create({
       data: {
         volgnummer,
@@ -182,6 +197,14 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
         },
         voorwerpStatus: true,
         afdeling: true,
+      },
+    })
+
+    // Link voorwerp to active cafedag
+    await prisma.cafedagvoorwerp.create({
+      data: {
+        cafedagId: activeCafedag.cafedagId,
+        voorwerpId: voorwerp.voorwerpId,
       },
     })
 

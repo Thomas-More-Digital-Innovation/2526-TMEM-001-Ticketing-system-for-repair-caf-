@@ -129,7 +129,7 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
     try {
       setQrUserName(item.name);
       const result = await generateQRLoginToken(item.id);
-      
+
       if (result.success && result.token) {
         setQrToken(result.token);
         setShowQRModal(true);
