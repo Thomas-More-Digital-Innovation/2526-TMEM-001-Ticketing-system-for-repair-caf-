@@ -12,6 +12,7 @@ interface VoorwerpData {
   volgnummer: string;
   klachtBeschrijving?: string;
   voorwerpBeschrijving?: string;
+  advies?: string;
   gebruikteMaterialen?: Array<{
     aantal: number;
     materiaal: {
@@ -116,7 +117,7 @@ export default function DeliverConfirmPage() {
             <div className="flex-1 bg-white rounded-lg p-6 min-h-[200px]">
               <h3 className="text-xl font-semibold mb-4 text-black">Advies</h3>
               <div className="text-black whitespace-pre-wrap">
-                {voorwerp.klachtBeschrijving || 'Geen advies beschikbaar'}
+                {voorwerp.advies || 'Geen advies beschikbaar'}
               </div>
             </div>
 
