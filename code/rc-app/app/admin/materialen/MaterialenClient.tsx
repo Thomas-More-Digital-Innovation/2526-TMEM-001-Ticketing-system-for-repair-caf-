@@ -25,9 +25,24 @@ export default function MaterialenClient({ materialen }: MaterialenClientProps) 
     const [modalTitle, setModalTitle] = useState('Materiaal bewerken');
 
     const columns = [
+        { key: 'fotoUrl', header: 'Foto' },
         { key: 'naam', header: 'Naam' },
-        { key: 'materiaalId', header: 'ID' },
+        { key: 'prijs', header: 'Prijs' },
     ];
+
+    const renderCell = (key: string, value: any) => {
+        if (key === 'fotoUrl') {
+            return value ? (
+                <img src={value} alt="Materiaal" className="w-16 h-16 object-cover rounded" />
+            ) : (
+                <div className="w-16 h-16 bg-gray-700 rounded flex items-center justify-center text-gray-500 text-xs">Geen foto</div>
+            );
+        }
+        if (key === 'prijs') {
+            return value != null ? `€${(Number(value) / 100).toFixed(2).replace('.', ',')}` : 'N.v.t';
+        }
+        return value;
+    };
 
     const filteredData = materialen.filter((materiaal) =>
         materiaal.naam.toLowerCase().includes(searchTerm.toLowerCase())
@@ -74,12 +89,16 @@ export default function MaterialenClient({ materialen }: MaterialenClientProps) 
                 fotoUrl = uploadResult.url;
             }
 
+            // Convert euros to cents for storage (handle both comma and point as decimal separator)
+            const prijsInCents = data.price ? Math.round(parseFloat(data.price.replace(',', '.')) * 100) : undefined;
+
             if (selectedItem) {
                 // Update existing
                 const result = await updateMateriaal(
                     selectedItem.materiaalId, 
                     data.name,
-                    fotoUrl
+                    fotoUrl,
+                    prijsInCents
                 );
                 if (result.success) {
                     setShowEditModal(false);
@@ -89,7 +108,7 @@ export default function MaterialenClient({ materialen }: MaterialenClientProps) 
                 }
             } else {
                 // Create new
-                const result = await createMateriaal(data.name, fotoUrl);
+                const result = await createMateriaal(data.name, fotoUrl, prijsInCents);
                 if (result.success) {
                     setShowEditModal(false);
                 } else {
@@ -141,6 +160,7 @@ export default function MaterialenClient({ materialen }: MaterialenClientProps) 
                         data={filteredData}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        renderCell={renderCell}
                     />
                 </div>
             </div>
@@ -150,7 +170,7 @@ export default function MaterialenClient({ materialen }: MaterialenClientProps) 
                 isOpen={showEditModal}
                 item={selectedItem ? { 
                     name: selectedItem.naam, 
-                    price: '0', 
+                    price: selectedItem.prijs ? (selectedItem.prijs / 100).toFixed(2).replace('.', ',') : '', 
                     photo: selectedItem.fotoUrl || '' 
                 } : null}
                 onConfirm={confirmEdit}

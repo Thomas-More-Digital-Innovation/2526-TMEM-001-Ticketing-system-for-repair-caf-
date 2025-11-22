@@ -523,3 +523,64 @@ export async function completeVoorwerpWithAdvice(data: CompleteVoorwerpWithAdvic
     return { success: false, error: 'Er is een fout opgetreden bij het voltooien' }
   }
 }
+
+// Delete a voorwerp
+export async function deleteVoorwerp(volgnummer: string) {
+  try {
+    // First, find the voorwerp to get its ID
+    const voorwerp = await prisma.voorwerp.findUnique({
+      where: { volgnummer },
+      select: { voorwerpId: true }
+    })
+
+    if (!voorwerp) {
+      return { success: false, error: 'Voorwerp not found' }
+    }
+
+    // Delete related records first to avoid foreign key constraint violations
+    // Delete in transaction to ensure data consistency
+    await prisma.$transaction(async (tx) => {
+      // Delete related Cafedagvoorwerp records
+      await tx.cafedagvoorwerp.deleteMany({
+        where: { voorwerpId: voorwerp.voorwerpId }
+      })
+
+      // Delete related GebruikteMateriaal records
+      await tx.gebruikteMateriaal.deleteMany({
+        where: { voorwerpId: voorwerp.voorwerpId }
+      })
+
+      // Delete related ReparatieStatus if exists
+      await tx.reparatieStatus.deleteMany({
+        where: { voorwerpId: voorwerp.voorwerpId }
+      })
+
+      // Delete related PrintJob records
+      await tx.printJob.deleteMany({
+        where: { voorwerpId: voorwerp.voorwerpId }
+      })
+
+      // Finally, delete the voorwerp itself
+      await tx.voorwerp.delete({
+        where: { volgnummer }
+      })
+    })
+
+    // Broadcast update to all connected clients via WebSocket
+    try {
+      const { broadcastVoorwerpenUpdate } = await import('@/lib/broadcast')
+      await broadcastVoorwerpenUpdate()
+    } catch (error) {
+      console.error('Error broadcasting update:', error)
+    }
+
+    revalidatePath('/student')
+    revalidatePath('/counter')
+    revalidatePath('/admin/voorwerpen')
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting voorwerp:', error)
+    return { success: false, error: 'Failed to delete voorwerp' }
+  }
+}

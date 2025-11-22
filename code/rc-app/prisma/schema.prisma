@@ -142,6 +142,7 @@ model Materiaal {
   materiaalId         Int                  @id @default(autoincrement())
   naam                String
   fotoUrl             String?
+  prijs               Int?                 // Price in cents
   gebruikteMaterialen GebruikteMateriaal[]
 }
 

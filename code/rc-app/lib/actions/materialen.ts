@@ -133,12 +133,13 @@ export async function updateMateriaalAantal(
 }
 
 // Create a new materiaal
-export async function createMateriaal(naam: string, fotoUrl?: string) {
+export async function createMateriaal(naam: string, fotoUrl?: string, prijs?: number) {
   try {
     const materiaal = await prisma.materiaal.create({
       data: { 
         naam,
         fotoUrl: fotoUrl || null,
+        prijs: prijs || null,
       },
     })
 
@@ -151,13 +152,18 @@ export async function createMateriaal(naam: string, fotoUrl?: string) {
 }
 
 // Update an existing materiaal
-export async function updateMateriaal(materiaalId: number, naam: string, fotoUrl?: string | null) {
+export async function updateMateriaal(materiaalId: number, naam: string, fotoUrl?: string | null, prijs?: number) {
   try {
-    const updateData: { naam: string; fotoUrl?: string | null } = { naam };
+    const updateData: any = { naam };
     
     // Only update fotoUrl if it's explicitly provided (undefined means don't change)
     if (fotoUrl !== undefined) {
       updateData.fotoUrl = fotoUrl;
+    }
+    
+    // Only update prijs if it's explicitly provided (undefined means don't change)
+    if (prijs !== undefined) {
+      updateData.prijs = prijs;
     }
 
     const materiaal = await prisma.materiaal.update({
