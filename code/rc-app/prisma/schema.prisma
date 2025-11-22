@@ -105,11 +105,13 @@ model Voorwerp {
   afdelingId           Int
   voorwerpBeschrijving String?
   klachtBeschrijving   String?
+  advies               String?
   klant                Klant                @relation(fields: [klantId], references: [klantId])
   voorwerpStatus       VoorwerpStatus       @relation(fields: [voorwerpStatusId], references: [voorwerpStatusId])
   afdeling             Afdeling             @relation(fields: [afdelingId], references: [afdelingId])
   cafedagVoorwerp      Cafedagvoorwerp[]
   gebruikteMaterialen  GebruikteMateriaal[]
+  reparatieStatus      ReparatieStatus?
 }
 
 model VoorwerpStatus {
@@ -165,4 +167,12 @@ model PrintJob {
   completedAt    DateTime?
   errorMessage   String?
   printer        Printer   @relation(fields: [printerId], references: [printerId])
+}
+
+model ReparatieStatus {
+  reparatieStatusId Int      @id @default(autoincrement())
+  voorwerpId        Int      @unique
+  status            String   // "volledig_gerepareerd", "gedeeltelijk_gerepareerd", "niet_gerepareerd"
+  createdAt         DateTime @default(now())
+  voorwerp          Voorwerp @relation(fields: [voorwerpId], references: [voorwerpId])
 }

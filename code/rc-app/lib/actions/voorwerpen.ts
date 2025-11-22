@@ -408,3 +408,85 @@ export async function updateVoorwerp(volgnummer: string, data: any) {
     return { success: false, error: 'Er is een fout opgetreden bij het bijwerken' }
   }
 }
+
+interface CompleteVoorwerpWithAdviceInput {
+  volgnummer: string
+  advies: string
+  reparatieStatus: string
+}
+
+export async function completeVoorwerpWithAdvice(data: CompleteVoorwerpWithAdviceInput) {
+  try {
+    // Validate input
+    if (!data.advies || !data.reparatieStatus) {
+      return { success: false, error: 'Advies en reparatiestatus zijn verplicht' }
+    }
+
+    // Get the voorwerp first to retrieve voorwerpId
+    const voorwerp = await prisma.voorwerp.findUnique({
+      where: { volgnummer: data.volgnummer },
+    })
+
+    if (!voorwerp) {
+      return { success: false, error: 'Voorwerp niet gevonden' }
+    }
+
+    // Get "Klaar" status
+    const klaarStatus = await prisma.voorwerpStatus.findFirst({
+      where: { naam: 'Klaar' },
+    })
+
+    if (!klaarStatus) {
+      return { success: false, error: 'Status "Klaar" niet gevonden in database' }
+    }
+
+    // Update voorwerp with advice and status in a transaction
+    const updatedVoorwerp = await prisma.$transaction(async (tx) => {
+      // Update voorwerp with advice and set status to "Klaar"
+      const updated = await tx.voorwerp.update({
+        where: { volgnummer: data.volgnummer },
+        data: {
+          advies: data.advies,
+          voorwerpStatusId: klaarStatus.voorwerpStatusId,
+          klaarDuur: new Date(),
+        },
+        include: {
+          klant: true,
+          voorwerpStatus: true,
+          afdeling: true,
+        },
+      })
+
+      // Create or update repair status record
+      await tx.reparatieStatus.upsert({
+        where: { voorwerpId: voorwerp.voorwerpId },
+        update: {
+          status: data.reparatieStatus,
+        },
+        create: {
+          voorwerpId: voorwerp.voorwerpId,
+          status: data.reparatieStatus,
+        },
+      })
+
+      return updated
+    })
+
+    // Broadcast update to all connected clients via WebSocket
+    try {
+      const { broadcastVoorwerpenUpdate } = await import('@/lib/broadcast')
+      await broadcastVoorwerpenUpdate()
+    } catch (error) {
+      console.error('Error broadcasting update:', error)
+    }
+
+    revalidatePath('/student')
+    revalidatePath('/counter')
+    revalidatePath('/admin/voorwerpen')
+
+    return { success: true, voorwerp: updatedVoorwerp }
+  } catch (error) {
+    console.error('Error completing voorwerp with advice:', error)
+    return { success: false, error: 'Er is een fout opgetreden bij het voltooien' }
+  }
+}
