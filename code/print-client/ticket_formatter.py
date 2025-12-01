@@ -56,7 +56,7 @@ class TicketFormatter:
         cmd = self._init_printer()
         cmd += self._format_header(is_delivery)
         cmd += self._format_separator()
-        cmd += self._format_ticket_details(volgnummer, klant_type, afdeling_naam, voorwerp_beschrijving, klacht_beschrijving)
+        cmd += self._format_ticket_details(volgnummer, klant_type, afdeling_naam, voorwerp_beschrijving, klacht_beschrijving, is_delivery, print_data)
         
         if is_delivery:
             cmd += self._format_materials_section(print_data)
@@ -100,7 +100,9 @@ class TicketFormatter:
         klant_type: str,
         afdeling_naam: str,
         voorwerp_beschrijving: Optional[str],
-        klacht_beschrijving: Optional[str]
+        klacht_beschrijving: Optional[str],
+        is_delivery: bool = False,
+        print_data: Optional[Dict[str, Any]] = None
     ) -> bytes:
         """Format ticket details section"""
         # Use center alignment - the text will be centered on the paper
@@ -134,7 +136,15 @@ class TicketFormatter:
             cmd += self._wrap_text(voorwerp_beschrijving, 42)
             cmd += b'\n'
         
-        if klacht_beschrijving:
+        # For delivery receipts, show advies instead of problem
+        if is_delivery and print_data and print_data.get('advies'):
+            cmd += self.ESC + b'E\x01'  # Bold on
+            cmd += b'Advies:\n'
+            cmd += self.ESC + b'E\x00'  # Bold off
+            cmd += self._wrap_text(print_data.get('advies'), 42)
+            cmd += self.ESC + b'a\x01'  # Center alignment
+            cmd += b'\n'
+        elif klacht_beschrijving:
             cmd += self.ESC + b'E\x01'  # Bold on
             cmd += b'Probleem:\n'
             cmd += self.ESC + b'E\x00'  # Bold off
@@ -187,22 +197,19 @@ class TicketFormatter:
                 aantal = material.get('aantal', 0)
                 prijs = material.get('prijs', 0)
                 
-                # Material name and quantity
-                line = f'{naam[:25]:<25} {aantal:>2}x'.encode(self.encoding, errors='replace')
+                # Material name, quantity and price on one line
+                # Keep within 32 chars to fit inside the separator
+                line = f'{naam[:20]:<20} {aantal:>2}x € {prijs:>5.2f}'.encode(self.encoding, errors='replace')
                 cmd += line + b'\n'
-                
-                # Price on next line, right-aligned
-                cmd += f'                    EUR {prijs:>6.2f}\n'.encode(self.encoding, errors='replace')
         else:
             cmd += b'Geen materialen gebruikt\n'
         
-        cmd += b'\n'
-        cmd += b'--------------------------------\n'
+        cmd += b'================================\n'
         
         # Totals
         total_price = print_data.get('totalPrice', 0)
         cmd += self.ESC + b'E\x01'  # Bold on
-        cmd += f'TOTAAL:             EUR {total_price:>6.2f}\n'.encode(self.encoding, errors='replace')
+        cmd += f'TOTAAL:          € {total_price:>6.2f}\n'.encode(self.encoding, errors='replace')
         cmd += self.ESC + b'E\x00'  # Bold off
         cmd += b'\n'
         
