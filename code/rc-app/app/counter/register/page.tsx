@@ -73,6 +73,12 @@ export default function RegisterItemPage() {
         return;
       }
 
+        if (result.warning) {
+          // Display warning to user and stop so staff can review
+          setError(result.warning)
+          setIsLoading(false)
+          return
+        }
       // Success - redirect to confirmation page with tracking number
       localStorage.setItem('registeredItem', JSON.stringify(result.voorwerp));
       const trackingNumber = result.trackingNumber || result.voorwerp?.voorwerpNummer || 'XXXX';

@@ -189,7 +189,8 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
     }
 
     // Create the item
-    const voorwerp = await prisma.voorwerp.create({
+    console.info('registerVoorwerp: creating voorwerp', { volgnummer, klantId: klant.klantId, afdelingId, itemDescription: data.itemDescription })
+    const created = await prisma.voorwerp.create({
       data: {
         volgnummer,
         klantId: klant.klantId,
@@ -200,24 +201,22 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
         voorwerpBeschrijving: data.itemDescription,
         klachtBeschrijving: data.problemDescription,
       },
+    })
+
+    // Re-fetch with relations to ensure nested data is loaded
+    const voorwerp = await prisma.voorwerp.findUnique({
+      where: { voorwerpId: created.voorwerpId },
       include: {
-        klant: {
-          include: {
-            klantType: true,
-          },
-        },
+        klant: { include: { klantType: true } },
         voorwerpStatus: true,
         afdeling: true,
       },
     })
 
+    console.info('registerVoorwerp: created voorwerp with relations', { voorwerpId: created.voorwerpId, hasKlant: !!voorwerp?.klant, klant: voorwerp?.klant })
+
     // Link voorwerp to active cafedag
-    await prisma.cafedagvoorwerp.create({
-      data: {
-        cafedagId: activeCafedag.cafedagId,
-        voorwerpId: voorwerp.voorwerpId,
-      },
-    })
+    await prisma.cafedagvoorwerp.create({ data: { cafedagId: activeCafedag.cafedagId, voorwerpId: voorwerp!.voorwerpId } })
 
     // Broadcast update to all connected clients via WebSocket
     try {
@@ -230,13 +229,19 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
     // Send print job to connected printer
     try {
       const { sendPrintJob } = await import('@/lib/printer-broadcast')
+
+      // Guard against missing klant/klantType by using fallbacks
+      const klantTypeName = voorwerp?.klant?.klantType?.naam || 'Unknown'
+      const afdelingNaam = voorwerp?.afdeling?.naam || 'Unknown'
+
       const printResult = await sendPrintJob({
-        voorwerpId: voorwerp.voorwerpId,
-        volgnummer: voorwerp.volgnummer,
-        klantType: voorwerp.klant.klantType.naam,
-        afdelingNaam: voorwerp.afdeling.naam,
-        voorwerpBeschrijving: voorwerp.voorwerpBeschrijving,
-        klachtBeschrijving: voorwerp.klachtBeschrijving,
+        voorwerpId: voorwerp!.voorwerpId,
+        volgnummer: voorwerp!.volgnummer,
+        klantType: klantTypeName,
+        afdelingNaam: afdelingNaam,
+        voorwerpBeschrijving: voorwerp!.voorwerpBeschrijving,
+        klachtBeschrijving: voorwerp!.klachtBeschrijving,
+        printData: undefined,
       })
 
       if (printResult.success) {
@@ -252,7 +257,10 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
     revalidatePath('/counter')
     revalidatePath('/admin/voorwerpen')
 
-    return { success: true, voorwerp, trackingNumber: volgnummer }
+    // Warn caller if klant information is missing
+    const warning = voorwerp && !voorwerp.klant ? 'Klant informatie ontbreekt voor dit voorwerp' : undefined
+
+    return { success: true, voorwerp, trackingNumber: volgnummer, warning }
   } catch (error) {
     console.error('Error registering item:', error)
     return { success: false, error: 'Er is een fout opgetreden bij het registreren' }
