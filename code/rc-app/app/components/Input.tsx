@@ -7,6 +7,7 @@ interface InputProps {
   type?: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   multiline?: boolean;
   rows?: number;
   className?: string;
@@ -20,6 +21,7 @@ export default function Input({
   type = 'text',
   value,
   onChange,
+  onBlur,
   multiline = false,
   rows = 1,
   className = '',
@@ -43,6 +45,7 @@ export default function Input({
           required={required}
           value={value}
           onChange={onChange}
+          onBlur={onBlur}
           rows={rows}
           disabled={disabled}
           className={inputClasses}
@@ -55,6 +58,7 @@ export default function Input({
           required={required}
           value={value}
           onChange={onChange}
+          onBlur={onBlur}
           className={inputClasses}
         />
       )}
