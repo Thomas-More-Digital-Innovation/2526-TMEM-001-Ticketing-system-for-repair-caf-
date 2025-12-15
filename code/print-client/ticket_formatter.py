@@ -196,13 +196,19 @@ class TicketFormatter:
         cmd += self.ESC + b'E\x00'  # Bold off
         cmd += self._format_separator(newline_after=False)
         
-        materials = print_data.get('materials', [])
+        materials = print_data.get('materials') or []
         if materials:
             for material in materials:
-                naam = material.get('naam', 'Unknown')
-                aantal = material.get('aantal', 0)
-                prijs_cents = material.get('prijsPerStuk', 0)
-                
+                naam = material.get('naam') or 'Unknown'
+                try:
+                    aantal = int(material.get('aantal') or 0)
+                except Exception:
+                    aantal = 0
+                try:
+                    prijs_cents = int(material.get('prijsPerStuk') or 0)
+                except Exception:
+                    prijs_cents = 0
+
                 # Material name, quantity and price on one line
                 # Keep within 32 chars to fit inside the separator
                 # Format cents as euros using integer arithmetic: 150 cents -> €1.50
@@ -215,7 +221,10 @@ class TicketFormatter:
         
         cmd += self._format_separator(char='-')         
         # Totals
-        total_price_cents = print_data.get('totalPrice', 0)
+        try:
+            total_price_cents = int(print_data.get('totalPrice') or 0)
+        except Exception:
+            total_price_cents = 0
         cmd += self.ESC + b'E\x01'  # Bold on
         # Format cents as euros using integer arithmetic: 150 cents -> €1.50
         euros = total_price_cents // 100
@@ -339,6 +348,10 @@ class TicketFormatter:
             if print_data.get('materials'):
                 logger.info(f'Materials:     {len(print_data["materials"])} items')
             if print_data.get('totalPrice') is not None:
-                logger.info(f'Total:         €{print_data["totalPrice"]:.2f}')
+                try:
+                    total = int(print_data.get('totalPrice'))
+                    logger.info(f'Total:         €{(total / 100):.2f}')
+                except Exception:
+                    logger.info(f'Total:         {print_data.get("totalPrice")}')
         
         logger.info('='*60)
