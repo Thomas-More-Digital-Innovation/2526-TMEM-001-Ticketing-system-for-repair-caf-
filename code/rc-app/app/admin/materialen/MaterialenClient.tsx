@@ -12,6 +12,7 @@ import {
     deleteMateriaal,
 } from '@/lib/actions/materialen';
 import type { Materiaal } from '@prisma/client';
+import { Plus } from '@deemlol/next-icons';
 
 interface MaterialenClientProps {
     readonly materialen: Materiaal[];
@@ -138,18 +139,17 @@ export default function MaterialenClient({ materialen }: MaterialenClientProps) 
             {/* Content */}
             <div className="flex flex-col gap-2.5 px-2.5 lg:px-24">
                 {/* Search and Add */}
-                <div className="flex flex-col lg:flex-row items-start gap-2.5">
+                <div className="flex flex-row items-end gap-2.5">
                     <div className="flex-1 w-full">
                         <Input
                             label="Zoeken"
                             placeholder="Bout"
-                            required
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <Button variant="primary" className="mt-6" onClick={handleAdd}>
-                        +
+                    <Button variant="primary" className="h-12" onClick={handleAdd}>
+                        <Plus size={24} color="#FFFFFF" />
                     </Button>
                 </div>
 

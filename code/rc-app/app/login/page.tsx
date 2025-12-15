@@ -183,7 +183,7 @@ export default function LoginPage() {
           <div className="w-full flex flex-col gap-2.5">
             <Input
               label="Gebruikersnaam"
-              placeholder="admin"
+              placeholder=""
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -191,7 +191,7 @@ export default function LoginPage() {
             />
             <Input
               label="Wachtwoord"
-              placeholder="********"
+              placeholder=""
               type="password"
               required
               value={password}
@@ -201,12 +201,6 @@ export default function LoginPage() {
             <Button variant="primary" type="submit" className="w-full mt-4" disabled={isLoading}>
               {isLoading ? 'Bezig met inloggen...' : 'Login'}
             </Button>
-            
-            {/* Login hints for development */}
-            <div className="text-gray-400 text-xs text-center mt-2">
-              <p>Test accounts:</p>
-              <p>admin/admin123 | balie1/balie123</p>
-            </div>
           </div>
         </form>
       </div>

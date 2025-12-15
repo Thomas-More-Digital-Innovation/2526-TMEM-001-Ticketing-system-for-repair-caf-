@@ -9,6 +9,9 @@ import QRLoginModal from '../../components/QRLoginModal';
 import GebruikerEditModal from '../../components/modals/GebruikerEditModal';
 import { generateQRLoginToken } from '@/lib/actions/gebruikers';
 import type { GebruikerWithType } from '@/lib/types';
+import { getGebruikerTypeIdFromKey, getKeyFromDbName } from '@/lib/constants/gebruikers';
+import { Plus } from '@deemlol/next-icons';
+
 
 interface TableRow {
   id: number;
@@ -48,6 +51,17 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
     studentNumber: gebruiker.studentNummer || 'N.v.t'
   }));
 
+  // Apply search filter
+  const filteredData = data.filter((item) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (item.name || '').toLowerCase().includes(term) ||
+      (item.username || '').toLowerCase().includes(term) ||
+      (item.type || '').toLowerCase().includes(term) ||
+      (item.studentNumber || '').toLowerCase().includes(term)
+    );
+  });
+
   const handleEdit = (item: TableRow) => {
     setSelectedItem(item);
     setModalTitle('Gebruiker bewerken');
@@ -72,30 +86,23 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
       return;
     }
 
-    if (data.type.toLowerCase() === 'student' && (!data.studentNumber || data.studentNumber.trim() === '')) {
+    if (data.type === 'student' && (!data.studentNumber || data.studentNumber.trim() === '')) {
       alert('Studentnummer is verplicht voor studenten');
       return;
     }
 
-    if (data.type.toLowerCase() !== 'student' && (!data.username || data.username.trim() === '')) {
+    if (data.type !== 'student' && (!data.username || data.username.trim() === '')) {
       alert('Gebruikersnaam is verplicht voor niet-studenten');
       return;
     }
 
     // Only validate password for non-student users
-    if (data.type.toLowerCase() !== 'student' && data.password !== data.passwordConfirm) {
+    if (data.type !== 'student' && data.password !== data.passwordConfirm) {
       alert('Wachtwoorden komen niet overeen');
       return;
     }
 
-    // Map type name to ID
-    const typeMap: { [key: string]: number } = {
-      'admin': 1,
-      'student': 2,
-      'baliemedewerker': 3
-    };
-
-    const gebruikerTypeId = typeMap[data.type.toLowerCase()] || 2;
+    const gebruikerTypeId = getGebruikerTypeIdFromKey(data.type);
 
     if (selectedItem) {
       // Update existing
@@ -114,15 +121,15 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
       }
     } else {
       // Create new - need username
-      const gebruikerNaam = data.type.toLowerCase() === 'student' && data.studentNumber 
-        ? data.studentNumber 
+      const gebruikerNaam = data.type === 'student' && data.studentNumber
+        ? data.studentNumber
         : data.username || data.name.toLowerCase().replaceAll(/\s+/g, '');
       const { createGebruiker } = await import('@/lib/actions/gebruikers');
       const result = await createGebruiker({
         gebruikerNaam,
         naam: data.name,
         studentNummer: data.studentNumber,
-        wachtwoord: data.type.toLowerCase() === 'student' ? '' : data.password,
+        wachtwoord: data.type === 'student' ? '' : data.password,
         gebruikerTypeId,
       });
       if (result.success) {
@@ -192,18 +199,17 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
       {/* Content */}
       <div className="flex flex-col gap-2.5 px-2.5 lg:px-24">
         {/* Search and Add */}
-        <div className="flex flex-col lg:flex-row items-start gap-2.5">
+        <div className="flex flex-row items-end gap-2.5">
           <div className="flex-1 w-full">
             <Input
               label="Zoeken"
               placeholder="Repaircafe 2025"
-              required
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="primary" className="mt-6" onClick={handleAdd}>
-            +
+          <Button variant="primary" className="h-12" onClick={handleAdd}>
+            <Plus size={24} color="#FFFFFF" />
           </Button>
         </div>
 
@@ -211,7 +217,7 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
         <div className="py-2.5">
           <Table
             columns={columns}
-            data={data}
+            data={filteredData}
             onEdit={handleEdit}
             onDelete={handleDelete}
             renderCell={renderCell}
@@ -222,11 +228,11 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
       {/* Edit Modal */}
       <GebruikerEditModal
         isOpen={showEditModal}
-        item={selectedItem ? { 
-          name: selectedItem.name, 
-          type: selectedItem.type, 
+        item={selectedItem ? {
+          name: selectedItem.name,
+          type: getKeyFromDbName(selectedItem.type),
           username: selectedItem.username !== 'N.v.t' ? selectedItem.username : undefined,
-          studentNumber: selectedItem.studentNumber !== 'N.v.t' ? selectedItem.studentNumber : undefined 
+          studentNumber: selectedItem.studentNumber !== 'N.v.t' ? selectedItem.studentNumber : undefined
         } : null}
         onConfirm={confirmEdit}
         onCancel={() => {

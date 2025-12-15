@@ -10,6 +10,7 @@ interface EditModalProps {
   children: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
+  confirmDisabled?: boolean;
 }
 
 export default function EditModal({
@@ -20,12 +21,13 @@ export default function EditModal({
   children,
   confirmText = 'Bevestigen',
   cancelText = 'Annuleren'
+  , confirmDisabled = false
 }: EditModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-[658px] rounded-2xl bg-[#ED532A] p-8 flex flex-col gap-2.5">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onCancel}>
+      <div className="w-full max-w-[658px] rounded-2xl bg-[#05293D] p-8 flex flex-col gap-2.5" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-white font-inter text-xl font-bold leading-[30px] tracking-[-0.4px]">
           {title}
         </h2>
@@ -44,8 +46,9 @@ export default function EditModal({
             </span>
           </button>
           <button
-            onClick={onConfirm}
-            className="flex-1 h-12 px-4 py-3 flex items-center justify-center rounded-md bg-[#BC3535] cursor-pointer hover:bg-[#a32e2e]"
+            onClick={() => !confirmDisabled && onConfirm()}
+            disabled={confirmDisabled}
+            className={`flex-1 h-12 px-4 py-3 flex items-center justify-center rounded-md ${confirmDisabled ? 'bg-[#B45252] opacity-60 cursor-not-allowed' : 'bg-[#BC3535] cursor-pointer hover:bg-[#a32e2e]'}`}
           >
             <span className="text-white font-inter text-base font-semibold leading-[22px] tracking-[-0.32px]">
               {confirmText}

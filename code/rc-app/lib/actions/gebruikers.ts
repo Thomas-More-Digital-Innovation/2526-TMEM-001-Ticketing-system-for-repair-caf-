@@ -7,9 +7,9 @@ import crypto from 'node:crypto'
 interface CreateGebruikerInput {
   gebruikerNaam: string
   naam: string
-  studentNummer?: string
   wachtwoord: string
   gebruikerTypeId: number
+  studentNummer?: string
 }
 
 export async function createGebruiker(data: CreateGebruikerInput) {
@@ -44,9 +44,9 @@ export async function createGebruiker(data: CreateGebruikerInput) {
         data: {
           gebruikerNaam: data.gebruikerNaam,
           naam: data.naam,
-          studentNummer: data.studentNummer,
           wachtwoord: data.wachtwoord, // In production, hash this password!
           gebruikerTypeId: data.gebruikerTypeId,
+          ...(data.studentNummer && { studentNummer: data.studentNummer })
         },
         include: {
           gebruikerType: true,
@@ -69,9 +69,9 @@ export async function createGebruiker(data: CreateGebruikerInput) {
         data: {
           gebruikerNaam: data.gebruikerNaam,
           naam: data.naam,
-          studentNummer: data.studentNummer,
           wachtwoord: data.wachtwoord, // In production, hash this password!
           gebruikerTypeId: data.gebruikerTypeId,
+          ...(data.studentNummer && { studentNummer: data.studentNummer })
         },
         include: {
           gebruikerType: true,
@@ -93,18 +93,18 @@ export async function updateGebruiker(
   data: {
     gebruikerNaam?: string
     naam?: string
-    studentNummer?: string
     wachtwoord?: string
     gebruikerTypeId?: number
+    studentNummer?: string
   }
 ) {
   try {
     const updateData: any = {}
     if (data.gebruikerNaam) updateData.gebruikerNaam = data.gebruikerNaam
     if (data.naam) updateData.naam = data.naam
-    if (data.studentNummer !== undefined) updateData.studentNummer = data.studentNummer
     if (data.wachtwoord) updateData.wachtwoord = data.wachtwoord // In production, hash this!
     if (data.gebruikerTypeId) updateData.gebruikerTypeId = data.gebruikerTypeId
+    if (data.studentNummer) updateData.studentNummer = data.studentNummer
 
     const gebruiker = await prisma.gebruiker.update({
       where: { gebruikerId },

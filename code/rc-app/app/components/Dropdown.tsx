@@ -13,6 +13,7 @@ interface DropdownProps {
   value?: string;
   onChange?: (value: string) => void;
   className?: string;
+  disabled?: boolean;
 }
 
 export default function Dropdown({
@@ -20,17 +21,43 @@ export default function Dropdown({
   placeholder = 'Select an option',
   value,
   onChange,
-  className = ''
+  className = '',
+  disabled = false
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState(value || '');
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
 
   // Sync internal state with value prop when it changes
   useEffect(() => {
     setSelectedValue(value || '');
   }, [value]);
 
+  useEffect(() => {
+    if (disabled) {
+      setIsOpen(false);
+    }
+  }, [disabled]);
+
+  // Close the dropdown when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleOutside = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      if (!containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+    };
+  }, [isOpen]);
+
   const handleSelect = (optionValue: string) => {
+    if (disabled) return;
     setSelectedValue(optionValue);
     setIsOpen(false);
     if (onChange) {
@@ -41,11 +68,15 @@ export default function Dropdown({
   const selectedLabel = options.find(opt => opt.value === selectedValue)?.label || placeholder;
 
   return (
-    <div className={`relative ${className}`}>
+    <div ref={containerRef} className={`relative ${className}`}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between gap-0.5 w-full px-3.5 py-2 rounded-md bg-white text-black font-open-sans text-2xl font-normal cursor-pointer hover:bg-gray-50"
+        disabled={disabled}
+        onClick={() => {
+          if (disabled) return;
+          setIsOpen(!isOpen);
+        }}
+        className={`flex items-center justify-between gap-0.5 w-full px-3.5 py-2 rounded-md ${isOpen ? 'rounded-b-none' : ''} bg-white text-black font-open-sans text-2xl font-normal ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}
       >
         <span>{selectedLabel}</span>
         <svg
