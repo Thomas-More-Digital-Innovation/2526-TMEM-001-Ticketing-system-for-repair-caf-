@@ -1,17 +1,4 @@
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
-
-const UPLOAD_DIR = join(process.cwd(), 'public', 'uploads');
-
-/**
- * Ensures the upload directory exists
- */
-async function ensureUploadDir() {
-  if (!existsSync(UPLOAD_DIR)) {
-    await mkdir(UPLOAD_DIR, { recursive: true });
-  }
-}
+import { put, del } from '@vercel/blob';
 
 /**
  * Generates a unique filename with timestamp and random string
@@ -24,44 +11,35 @@ function generateUniqueFilename(originalName: string): string {
 }
 
 /**
- * Saves an uploaded file to the uploads directory
+ * Saves an uploaded file to Vercel Blob storage
  * @param file - The File object from the upload
- * @returns The relative URL path to the saved file (e.g., /uploads/filename.jpg)
+ * @returns The URL of the uploaded file
  */
 export async function saveUploadedFile(file: File): Promise<string> {
-  await ensureUploadDir();
-  
   const filename = generateUniqueFilename(file.name);
-  const filepath = join(UPLOAD_DIR, filename);
   
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(filepath, buffer);
+  // Upload to Vercel Blob
+  const blob = await put(filename, file, {
+    access: 'public',
+  });
   
-  // Return the public URL path
-  return `/uploads/${filename}`;
+  // Return the public URL
+  return blob.url;
 }
 
 /**
- * Deletes a file from the uploads directory
- * @param fileUrl - The URL path of the file (e.g., /uploads/filename.jpg)
+ * Deletes a file from Vercel Blob storage
+ * @param fileUrl - The URL of the file to delete
  */
 export async function deleteUploadedFile(fileUrl: string): Promise<void> {
-  if (!fileUrl || !fileUrl.startsWith('/uploads/')) {
+  if (!fileUrl) {
     return;
   }
   
-  const filename = fileUrl.split('/').pop();
-  if (!filename) return;
-  
-  const filepath = join(UPLOAD_DIR, filename);
-  
   try {
-    const { unlink } = await import('fs/promises');
-    if (existsSync(filepath)) {
-      await unlink(filepath);
-    }
+    await del(fileUrl);
   } catch (error) {
-    console.error('Error deleting file:', error);
+    console.error('Error deleting file from Vercel Blob:', error);
     // Don't throw - just log the error
   }
 }
