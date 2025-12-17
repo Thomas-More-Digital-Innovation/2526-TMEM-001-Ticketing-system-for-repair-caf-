@@ -55,4 +55,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# Run migrations and seed before starting the server
+CMD ["/bin/sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node server.js"]
