@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Traefik Reverse Proxy
   traefik:
-    image: traefik:v3.0
+    image: traefik:v3.4
     container_name: repaircafe-traefik
     restart: unless-stopped
     command:
