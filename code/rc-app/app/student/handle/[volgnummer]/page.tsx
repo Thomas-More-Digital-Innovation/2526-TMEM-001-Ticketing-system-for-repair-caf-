@@ -3,6 +3,9 @@ import { getVoorwerpByVolgnummer } from '@/lib/data/voorwerpen';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 import HandleVoorwerpClient from './HandleVoorwerpClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function HandleVoorwerpPage({
   params,
 }: {

@@ -4,6 +4,9 @@ import { getAfdelingen } from '@/lib/data/afdelingen';
 import VoorwerpenClient from './VoorwerpenClient';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function VoorwerpenPage() {
   const voorwerpen = await getVoorwerpen();
   const afdelingen = await getAfdelingen();

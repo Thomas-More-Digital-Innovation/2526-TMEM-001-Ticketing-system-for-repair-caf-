@@ -2,6 +2,9 @@ import BackButton from '../../components/BackButton';
 import { getAfdelingen } from '@/lib/data/afdelingen';
 import AfdelingenClient from './AfdelingenClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AfdelingenPage() {
   const afdelingen = await getAfdelingen();
 

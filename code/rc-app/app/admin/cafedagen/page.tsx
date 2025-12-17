@@ -2,6 +2,9 @@ import BackButton from '../../components/BackButton';
 import { getCafedagen } from '@/lib/data/cafedagen';
 import CafeDagenClient from './CafeDagenClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function CafeDagenPage() {
   const cafedagen = await getCafedagen();
 

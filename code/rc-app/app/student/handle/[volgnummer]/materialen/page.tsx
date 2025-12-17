@@ -3,6 +3,9 @@ import { getVoorwerpByVolgnummer } from '@/lib/data/voorwerpen';
 import MaterialenSelectieClient from './MaterialenSelectieClient';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface PageProps {
   readonly params: Promise<{ volgnummer: string }>;
 }

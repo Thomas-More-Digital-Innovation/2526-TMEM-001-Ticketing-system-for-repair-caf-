@@ -2,6 +2,9 @@ import BackButton from '../../components/BackButton';
 import { getGebruikers } from '@/lib/data/gebruikers';
 import GebruikersClient from './GebruikersClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function GebruikersPage() {
   const gebruikers = await getGebruikers();
 
