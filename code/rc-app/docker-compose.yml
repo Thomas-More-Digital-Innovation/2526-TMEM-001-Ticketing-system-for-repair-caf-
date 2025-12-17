@@ -23,10 +23,10 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.email=r1036789@student.thomasmore.be"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     ports:
-      - "192.168.30.1:8080:80"
-      - "192.168.30.1:8443:443"
+      - "8080:80"
+      - "8443:443"
     volumes:
-      - /run/podman/podman.sock:/var/run/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_certs:/letsencrypt
     labels:
       # Dashboard
