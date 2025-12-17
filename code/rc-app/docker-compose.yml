@@ -7,8 +7,6 @@ services:
     container_name: repaircafe-traefik
     restart: unless-stopped
     command:
-      # Dashboard
-      - "--api.dashboard=true"
       # Docker provider
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -28,15 +26,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_certs:/letsencrypt
-    labels:
-      # Dashboard
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`traefik.repaircafe.davidmaat.be`)"
-      - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.middlewares=auth"
-      - "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0"
 
   # PostgreSQL Database
   postgres:
