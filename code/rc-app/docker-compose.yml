@@ -35,7 +35,7 @@ services:
       # Node environment
       NODE_ENV: production
     ports:
-      - "3000:3000"
+      - "192.168.30.1:3001:3000"
     volumes:
       # Mount uploads directory for local file storage (if not using Vercel Blob)
       - public_uploads:/app/public/uploads
