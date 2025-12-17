@@ -2,15 +2,15 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++ openssl
 
-# Copy prisma schema
+# Copy package files and prisma schema first
+COPY package*.json ./
 COPY prisma ./prisma
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Install dependencies (postinstall will run prisma generate)
+RUN npm install --legacy-peer-deps
 
 # Builder stage
 FROM base AS builder
