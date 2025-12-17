@@ -8,7 +8,7 @@ import ProtectedRoute from '../../../components/ProtectedRoute';
 export default function RegisterConfirmPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const volgnummer = searchParams.get('volgnummer') || 'XXXX';
+  const volgnummer = searchParams?.get('volgnummer') || 'XXXX';
 
   useEffect(() => {
     // Wait 5 seconds then redirect back
