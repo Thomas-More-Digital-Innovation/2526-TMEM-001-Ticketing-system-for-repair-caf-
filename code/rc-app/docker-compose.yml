@@ -39,15 +39,13 @@ services:
     volumes:
       # Mount uploads directory for local file storage (if not using Vercel Blob)
       - public_uploads:/app/public/uploads
-    command: >
-      sh -c "
-        echo 'Running database migrations...' &&
-        node node_modules/prisma/build/index.js migrate deploy &&
-        echo 'Seeding database...' &&
-        npm run db:seed || true &&
-        echo 'Starting application...' &&
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo 'Waiting for database...'
+        sleep 5
+        echo 'Starting application...'
         node server.js
-      "
 
 volumes:
   postgres_data:
