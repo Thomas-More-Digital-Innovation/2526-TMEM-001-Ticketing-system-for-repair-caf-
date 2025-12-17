@@ -247,7 +247,7 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
       if (printResult.success) {
         console.log('Print job created successfully')
       } else {
-        console.warn('Failed to create print job:', printResult.error)
+        console.warn('Failed to create print job:', 'error' in printResult ? printResult.error : 'Unknown error')
       }
     } catch (error) {
       console.error('Error creating print job:', error)
@@ -386,7 +386,7 @@ export async function confirmDelivery(volgnummer: string) {
       if (printResult.success) {
         console.log('Delivery receipt print job created successfully')
       } else {
-        console.warn('Failed to create delivery receipt print job:', printResult.error)
+        console.warn('Failed to create delivery receipt print job:', 'error' in printResult ? printResult.error : 'Unknown error')
       }
     } catch (error) {
       console.error('Error creating delivery receipt print job:', error)

@@ -38,7 +38,7 @@ export async function sendPrintJob(data: {
       printData: data.printData,
     })
 
-    if (!result.success) {
+    if (!result.success || !result.printJob) {
       return result
     }
 
@@ -110,7 +110,7 @@ export async function broadcastPrintJob(data: {
         printData: data.printData,
       })
 
-      if (result.success) {
+      if (result.success && result.printJob) {
         printJobs.push(result.printJob)
 
         // Send to printer via WebSocket if connected

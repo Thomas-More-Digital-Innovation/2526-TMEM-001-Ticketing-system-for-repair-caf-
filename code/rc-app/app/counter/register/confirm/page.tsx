@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import BackButton from '../../../components/BackButton';
 import ProtectedRoute from '../../../components/ProtectedRoute';
 
-export default function RegisterConfirmPage() {
+function ConfirmContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const volgnummer = searchParams?.get('volgnummer') || 'XXXX';
@@ -20,23 +20,35 @@ export default function RegisterConfirmPage() {
   }, [router]);
 
   return (
-    <ProtectedRoute allowedRoles={['Admin', 'Balie']}>
-      <div className="min-h-screen bg-[#03091C] flex flex-col">
-        {/* Header with back button */}
-        <div className="flex items-center p-5">
-          <BackButton />
-          <h1 className="flex-1 text-white font-open-sans text-2xl lg:text-3xl font-normal text-center pr-[100px]">
-            Ticket wordt geprint. Even geduld...
-          </h1>
-        </div>
-
-        {/* Centered volgnummer */}
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-white font-open-sans text-4xl lg:text-5xl font-normal">
-            Volgnummer is {volgnummer}
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#03091C] flex flex-col">
+      {/* Header with back button */}
+      <div className="flex items-center p-5">
+        <BackButton />
+        <h1 className="flex-1 text-white font-open-sans text-2xl lg:text-3xl font-normal text-center pr-[100px]">
+          Ticket wordt geprint. Even geduld...
+        </h1>
       </div>
+
+      {/* Centered volgnummer */}
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-white font-open-sans text-4xl lg:text-5xl font-normal">
+          Volgnummer is {volgnummer}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default function RegisterConfirmPage() {
+  return (
+    <ProtectedRoute allowedRoles={['Admin', 'Balie']}>
+      <Suspense fallback={
+        <div className="min-h-screen bg-[#03091C] flex items-center justify-center">
+          <p className="text-white font-open-sans text-2xl">Laden...</p>
+        </div>
+      }>
+        <ConfirmContent />
+      </Suspense>
     </ProtectedRoute>
   );
 }

@@ -81,7 +81,7 @@ export default function RegisterItemPage() {
         }
       // Success - redirect to confirmation page with tracking number
       localStorage.setItem('registeredItem', JSON.stringify(result.voorwerp));
-      const trackingNumber = result.trackingNumber || result.voorwerp?.voorwerpNummer || 'XXXX';
+      const trackingNumber = result.trackingNumber || result.voorwerp?.volgnummer || 'XXXX';
       if (result.trackingNumber) {
         localStorage.setItem('trackingNumber', result.trackingNumber);
       }
