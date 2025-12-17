@@ -1,6 +1,43 @@
 version: '3.8'
 
 services:
+  # Traefik Reverse Proxy
+  traefik:
+    image: traefik:v3.0
+    container_name: repaircafe-traefik
+    restart: unless-stopped
+    command:
+      # Dashboard
+      - "--api.dashboard=true"
+      # Docker provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # HTTP to HTTPS redirect
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      # Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=r1036789@student.thomasmore.be"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_certs:/letsencrypt
+    labels:
+      # Dashboard
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.repaircafe.davidmaat.be`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0"
+
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
@@ -34,10 +71,8 @@ services:
       
       # Node environment
       NODE_ENV: production
-    ports:
-      - "192.168.30.1:3001:3000"
     volumes:
-      # Mount uploads directory for local file storage (if not using Vercel Blob)
+      # Mount uploads directory for local file storage
       - public_uploads:/app/public/uploads
     entrypoint: ["/bin/sh", "-c"]
     command:
@@ -46,10 +81,18 @@ services:
         sleep 5
         echo 'Starting application...'
         node server.js
+    labels:
+      # Traefik routing
+      - "traefik.enable=true"
+      - "traefik.http.routers.repaircafe.rule=Host(`repaircafe.davidmaat.be`)"
+      - "traefik.http.routers.repaircafe.entrypoints=websecure"
+      - "traefik.http.routers.repaircafe.tls.certresolver=letsencrypt"
+      - "traefik.http.services.repaircafe.loadbalancer.server.port=3000"
 
 volumes:
   postgres_data:
     driver: local
-
   public_uploads:
+    driver: local
+  traefik_certs:
     driver: local
