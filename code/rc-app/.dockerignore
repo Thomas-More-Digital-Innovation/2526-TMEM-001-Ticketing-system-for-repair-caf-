@@ -1,0 +1,16 @@
+# Docker
+node_modules
+npm-debug.log
+.next
+.env
+.env.local
+.DS_Store
+*.log
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea

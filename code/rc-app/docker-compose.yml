@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: repaircafe-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: repaircafe
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: repaircafe-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/repaircafe?schema=public
+      
+      # Node environment
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount uploads directory for local file storage (if not using Vercel Blob)
+      - ./public/uploads:/app/public/uploads
+    command: >
+      sh -c "
+        echo 'Running database migrations...' &&
+        npx prisma migrate deploy &&
+        echo 'Seeding database...' &&
+        npx prisma db seed || true &&
+        echo 'Starting application...' &&
+        node server.js
+      "
+
+volumes:
+  postgres_data:
+    driver: local
