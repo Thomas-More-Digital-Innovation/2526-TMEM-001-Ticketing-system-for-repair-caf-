@@ -42,9 +42,9 @@ services:
     command: >
       sh -c "
         echo 'Running database migrations...' &&
-        npx prisma migrate deploy &&
+        node node_modules/prisma/build/index.js migrate deploy &&
         echo 'Seeding database...' &&
-        npx prisma db seed || true &&
+        npm run db:seed || true &&
         echo 'Starting application...' &&
         node server.js
       "
