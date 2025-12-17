@@ -40,7 +40,7 @@ services:
       - "3000:3000"
     volumes:
       # Mount uploads directory for local file storage (if not using Vercel Blob)
-      - ./public/uploads:/app/public/uploads
+      - public_uploads:/app/public/uploads
     command: >
       sh -c "
         echo 'Running database migrations...' &&
@@ -53,4 +53,7 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+
+  public_uploads:
     driver: local
