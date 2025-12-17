@@ -13,8 +13,8 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       # Entrypoints
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.address=:8080"
+      - "--entrypoints.websecure.address=:8443"
       # HTTP to HTTPS redirect
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
@@ -23,8 +23,8 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.email=r1036789@student.thomasmore.be"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "8443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_certs:/letsencrypt
