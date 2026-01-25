@@ -111,8 +111,20 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
     }
 
     if (!klant) {
-      // Find customer type
-      const klantType = await prisma.klantType.findFirst({ where: { naam: data.customerType } })
+      // Find customer type by id or name (frontend sends id strings)
+      let klantType = null
+      const maybeId = parseInt(data.customerType as any, 10)
+      if (!Number.isNaN(maybeId)) {
+        try {
+          klantType = await prisma.klantType.findUnique({ where: { klantTypeId: maybeId } })
+        } catch (e) {
+          // ignore and fallback to name lookup
+        }
+      }
+
+      if (!klantType) {
+        klantType = await prisma.klantType.findFirst({ where: { naam: data.customerType } })
+      }
 
       if (!klantType) {
         return { success: false, error: 'Klanttype niet gevonden' }
