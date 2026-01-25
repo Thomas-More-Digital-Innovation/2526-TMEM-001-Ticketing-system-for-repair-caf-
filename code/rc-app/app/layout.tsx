@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Open_Sans } from 'next/font/google';
+import { Inter, Open_Sans, Roboto_Mono } from 'next/font/google';
 import "./globals.css";
 
 const inter = Inter({ 
@@ -14,6 +14,12 @@ const openSans = Open_Sans({
   variable: '--font-open-sans',
 });
 
+const robotoMono = Roboto_Mono({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-roboto-mono',
+});
+
 export const metadata: Metadata = {
   title: "Repair Café",
   description: "Repair Café Management System",
@@ -26,9 +32,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="nl">
-      <body className={`${inter.variable} ${openSans.variable} antialiased`}>
+      <body className={`${inter.variable} ${openSans.variable} ${robotoMono.variable} antialiased`}>
         {children}
       </body>
     </html>
   );
-}
+} 

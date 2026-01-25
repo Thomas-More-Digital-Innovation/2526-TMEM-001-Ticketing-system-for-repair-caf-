@@ -147,7 +147,7 @@ export default function ClientView() {
                   key={item.voorwerpId}
                   className="w-full h-32 lg:h-44 flex items-center justify-center rounded-md bg-gray-400"
                 >
-                  <span className="text-white font-open-sans text-4xl font-normal">
+                  <span className="text-white font-roboto-mono text-4xl font-normal">
                     {item.volgnummer}
                   </span>
                 </div>
