@@ -2,6 +2,11 @@ import { Server } from 'socket.io'
 import type { NextApiRequest } from 'next'
 import type { NextApiResponseServerIO } from '@/types/socket'
 import { prisma } from '@/lib/prisma'
+import {
+  DEFAULT_PRINTER_BOTTOM_MESSAGE,
+  DEFAULT_PRINTER_TOP_MESSAGE,
+  getPrinterMessages,
+} from '@/lib/printer-settings'
 
 declare global {
   // eslint-disable-next-line no-var
@@ -98,7 +103,14 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
 
           if (pendingJobs.length > 0) {
             console.log(`Sending ${pendingJobs.length} pending jobs to ${printerNaam}`)
+            const printerMessages = await getPrinterMessages()
+
             for (const job of pendingJobs) {
+              const rawPrintData =
+                job.printData && typeof job.printData === 'object' && !Array.isArray(job.printData)
+                  ? (job.printData as Record<string, unknown>)
+                  : {}
+
               socket.emit('print-job', {
                 printJobId: job.printJobId,
                 volgnummer: job.volgnummer,
@@ -106,7 +118,17 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
                 afdelingNaam: job.afdelingNaam,
                 voorwerpBeschrijving: job.voorwerp.voorwerpBeschrijving,
                 klachtBeschrijving: job.voorwerp.klachtBeschrijving,
-                printData: job.printData,
+                printData: {
+                  ...rawPrintData,
+                  printerTopMessage:
+                    typeof rawPrintData.printerTopMessage === 'string' && rawPrintData.printerTopMessage.trim().length > 0
+                      ? rawPrintData.printerTopMessage
+                      : printerMessages.topMessage || DEFAULT_PRINTER_TOP_MESSAGE,
+                  printerBottomMessage:
+                    typeof rawPrintData.printerBottomMessage === 'string' && rawPrintData.printerBottomMessage.trim().length > 0
+                      ? rawPrintData.printerBottomMessage
+                      : printerMessages.bottomMessage || DEFAULT_PRINTER_BOTTOM_MESSAGE,
+                },
               })
 
               // Update job status to sent

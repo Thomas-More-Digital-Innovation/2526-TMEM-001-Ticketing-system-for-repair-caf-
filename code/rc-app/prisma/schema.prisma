@@ -174,6 +174,13 @@ model PrintJob {
   voorwerp       Voorwerp  @relation(fields: [voorwerpId], references: [voorwerpId])
 }
 
+model PrinterSetting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model ReparatieStatus {
   reparatieStatusId Int      @id @default(autoincrement())
   voorwerpId        Int      @unique

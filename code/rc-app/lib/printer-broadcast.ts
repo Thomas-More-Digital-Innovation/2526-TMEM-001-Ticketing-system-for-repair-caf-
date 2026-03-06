@@ -1,5 +1,6 @@
 import { createPrintJob } from '@/lib/actions/printers'
 import { getConnectedPrinters } from '@/lib/data/printers'
+import { getPrinterMessages } from '@/lib/printer-settings'
 
 /**
  * Send a print job to a connected printer
@@ -15,6 +16,13 @@ export async function sendPrintJob(data: {
   printData?: any // Additional JSON data (e.g., payment details, materials)
 }) {
   try {
+    const printerMessages = await getPrinterMessages()
+    const printData = {
+      ...(data.printData && typeof data.printData === 'object' ? data.printData : {}),
+      printerTopMessage: printerMessages.topMessage,
+      printerBottomMessage: printerMessages.bottomMessage,
+    }
+
     // Get first available connected printer
     const connectedPrinters = await getConnectedPrinters()
 
@@ -35,7 +43,7 @@ export async function sendPrintJob(data: {
       afdelingNaam: data.afdelingNaam,
       voorwerpBeschrijving: data.voorwerpBeschrijving || undefined,
       klachtBeschrijving: data.klachtBeschrijving || undefined,
-      printData: data.printData,
+      printData,
     })
 
     if (!result.success || !result.printJob) {
@@ -52,7 +60,7 @@ export async function sendPrintJob(data: {
           afdelingNaam: data.afdelingNaam,
           voorwerpBeschrijving: data.voorwerpBeschrijving,
           klachtBeschrijving: data.klachtBeschrijving,
-          printData: data.printData,
+          printData,
         })
 
         // Update status to sent
@@ -88,6 +96,13 @@ export async function broadcastPrintJob(data: {
   printData?: any // Additional JSON data (e.g., payment details, materials)
 }) {
   try {
+    const printerMessages = await getPrinterMessages()
+    const printData = {
+      ...(data.printData && typeof data.printData === 'object' ? data.printData : {}),
+      printerTopMessage: printerMessages.topMessage,
+      printerBottomMessage: printerMessages.bottomMessage,
+    }
+
     const connectedPrinters = await getConnectedPrinters()
 
     if (connectedPrinters.length === 0) {
@@ -107,7 +122,7 @@ export async function broadcastPrintJob(data: {
         afdelingNaam: data.afdelingNaam,
         voorwerpBeschrijving: data.voorwerpBeschrijving || undefined,
         klachtBeschrijving: data.klachtBeschrijving || undefined,
-        printData: data.printData,
+        printData,
       })
 
       if (result.success && result.printJob) {
@@ -123,7 +138,7 @@ export async function broadcastPrintJob(data: {
               afdelingNaam: data.afdelingNaam,
               voorwerpBeschrijving: data.voorwerpBeschrijving,
               klachtBeschrijving: data.klachtBeschrijving,
-              printData: data.printData,
+              printData,
             })
 
             // Update status to sent

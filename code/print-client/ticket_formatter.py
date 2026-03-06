@@ -52,16 +52,28 @@ class TicketFormatter:
             Raw bytes ready to send to printer
         """
         is_delivery = print_data and print_data.get('type') == 'delivery'
+        top_message = 'REPAIR CAFE'
+        bottom_message = 'Bedankt!'
+
+        if print_data:
+            custom_top_message = print_data.get('printerTopMessage')
+            custom_bottom_message = print_data.get('printerBottomMessage')
+
+            if isinstance(custom_top_message, str) and custom_top_message.strip():
+                top_message = custom_top_message.strip()
+
+            if isinstance(custom_bottom_message, str) and custom_bottom_message.strip():
+                bottom_message = custom_bottom_message.strip()
         
         cmd = self._init_printer()
-        cmd += self._format_header(is_delivery)
+        cmd += self._format_header(is_delivery, top_message)
         cmd += self._format_separator()
         cmd += self._format_ticket_details(volgnummer, klant_type, afdeling_naam, voorwerp_beschrijving, klacht_beschrijving, is_delivery, print_data)
         
         if is_delivery:
             cmd += self._format_materials_section(print_data)
         
-        cmd += self._format_footer(volgnummer, is_delivery)
+        cmd += self._format_footer(volgnummer, is_delivery, bottom_message)
         cmd += self._cut_paper()
         
         return cmd
@@ -72,12 +84,12 @@ class TicketFormatter:
         cmd += self.ESC + b't\x10'  # Set character encoding to Windows-1252
         return cmd
     
-    def _format_header(self, is_delivery: bool = False) -> bytes:
+    def _format_header(self, is_delivery: bool = False, top_message: str = 'REPAIR CAFE') -> bytes:
         """Format ticket header"""
         cmd = self.ESC + b'a\x01'  # Center alignment
         cmd += self.ESC + b'E\x01'  # Bold on
         cmd += self.GS + b'!\x11'  # Double height
-        cmd += b'REPAIR CAFE\n'
+        cmd += top_message.encode(self.encoding, errors='replace') + b'\n'
         cmd += self.GS + b'!\x00'  # Normal size
         
         if is_delivery:
@@ -235,13 +247,13 @@ class TicketFormatter:
         
         return cmd
     
-    def _format_footer(self, volgnummer: str, is_delivery: bool = False) -> bytes:
+    def _format_footer(self, volgnummer: str, is_delivery: bool = False, bottom_message: str = 'Bedankt!') -> bytes:
         """Format ticket footer"""
         cmd = self._format_separator()
         cmd += self.ESC + b'a\x01'  # Center alignment
         
         if is_delivery:
-            cmd += b'Bedankt!\n\n'
+            cmd += bottom_message.encode(self.encoding, errors='replace') + b'\n\n'
         else:
             # Print QR code for non-delivery tickets
             cmd += self._generate_qr_code(volgnummer)

@@ -228,6 +228,26 @@ async function main() {
 
   console.log('Created cafe:', repaircafe)
 
+  const printerTopMessage = await prisma.printerSetting.upsert({
+    where: { key: 'top_message' },
+    update: {},
+    create: {
+      key: 'top_message',
+      value: 'REPAIR CAFE',
+    },
+  })
+
+  const printerBottomMessage = await prisma.printerSetting.upsert({
+    where: { key: 'bottom_message' },
+    update: {},
+    create: {
+      key: 'bottom_message',
+      value: 'Bedankt!',
+    },
+  })
+
+  console.log('Created printer settings:', { printerTopMessage, printerBottomMessage })
+
   console.log('Seed completed successfully!')
 }
 
