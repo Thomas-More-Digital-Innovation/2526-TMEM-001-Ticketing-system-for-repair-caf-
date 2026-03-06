@@ -12,7 +12,7 @@ interface GebruikerEditModalProps {
     name: string;
     type: string;
     username?: string;
-    studentNumber?: string;
+    tableName?: string;
   } | null;
   onConfirm: (data: {
     name: string;
@@ -20,7 +20,7 @@ interface GebruikerEditModalProps {
     password: string;
     passwordConfirm: string;
     type: string;
-    studentNumber?: string;
+    tableName?: string;
   }) => void;
   onCancel: () => void;
   title?: string;
@@ -40,7 +40,7 @@ export default function GebruikerEditModal({
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [type, setType] = useState(item?.type?.toLowerCase() || '');
-  const [studentNumber, setStudentNumber] = useState(item?.studentNumber || '');
+  const [tableName, setTableName] = useState(item?.tableName || '');
 
   useEffect(() => {
     setName(item?.name || '');
@@ -48,7 +48,7 @@ export default function GebruikerEditModal({
     setPassword('');
     setPasswordConfirm('');
     setType(item?.type?.toLowerCase() || '');
-    setStudentNumber(item?.studentNumber || '');
+    setTableName(item?.tableName || '');
   }, [item]);
 
   const typeOptions = GEBRUIKER_TYPES.map((t) => ({ value: t.key, label: t.label }));
@@ -59,8 +59,8 @@ export default function GebruikerEditModal({
       alert('Naam is verplicht');
       return;
     }
-    if (type === 'student' && (!studentNumber || studentNumber.trim() === '')) {
-      alert('Studentnummer is verplicht voor studenten');
+    if (type === 'student' && (!tableName || tableName.trim() === '')) {
+      alert('Tafelnaam is verplicht voor studenten');
       return;
     }
     if (type !== 'student') {
@@ -91,7 +91,7 @@ export default function GebruikerEditModal({
       password, 
       passwordConfirm, 
       type, 
-      studentNumber: type === 'student' ? studentNumber : undefined 
+      tableName: type === 'student' ? tableName : undefined 
     });
   };
 
@@ -120,11 +120,11 @@ export default function GebruikerEditModal({
       />
       {type.toLowerCase() === 'student' ? (
         <Input
-          label="Studentnummer"
+          label="Tafelnaam"
           placeholder=""
           required
-          value={studentNumber}
-          onChange={(e) => setStudentNumber(e.target.value)}
+          value={tableName}
+          onChange={(e) => setTableName(e.target.value)}
         />
       ) : (
         <Input

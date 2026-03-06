@@ -18,7 +18,7 @@ interface TableRow {
   name: string;
   type: string;
   username: string;
-  studentNumber: string;
+  tableName: string;
 }
 
 interface GebruikersClientProps {
@@ -39,7 +39,7 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
     { key: 'name', header: 'Naam' },
     { key: 'type', header: 'Type' },
     { key: 'username', header: 'Gebruikersnaam' },
-    { key: 'studentNumber', header: 'StudentNummer' }
+    { key: 'tableName', header: 'Tafel' }
   ];
 
   // Transform gebruikers data to table format
@@ -48,7 +48,7 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
     name: gebruiker.naam,
     type: gebruiker.gebruikerType.typeNaam,
     username: gebruiker.gebruikerType.typeNaam === 'Student' ? 'N.v.t' : gebruiker.gebruikerNaam,
-    studentNumber: gebruiker.studentNummer || 'N.v.t'
+    tableName: gebruiker.tableName || 'N.v.t'
   }));
 
   // Apply search filter
@@ -58,7 +58,7 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
       (item.name || '').toLowerCase().includes(term) ||
       (item.username || '').toLowerCase().includes(term) ||
       (item.type || '').toLowerCase().includes(term) ||
-      (item.studentNumber || '').toLowerCase().includes(term)
+      (item.tableName || '').toLowerCase().includes(term)
     );
   });
 
@@ -79,15 +79,15 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
     setShowDeleteModal(true);
   };
 
-  const confirmEdit = async (data: { name: string; username?: string; password: string; passwordConfirm: string; type: string; studentNumber?: string }) => {
+  const confirmEdit = async (data: { name: string; username?: string; password: string; passwordConfirm: string; type: string; tableName?: string }) => {
     // Validate mandatory fields
     if (!data.name || data.name.trim() === '') {
       alert('Naam is verplicht');
       return;
     }
 
-    if (data.type === 'student' && (!data.studentNumber || data.studentNumber.trim() === '')) {
-      alert('Studentnummer is verplicht voor studenten');
+    if (data.type === 'student' && (!data.tableName || data.tableName.trim() === '')) {
+      alert('Tafelnaam is verplicht voor studenten');
       return;
     }
 
@@ -110,7 +110,7 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
       const result = await updateGebruiker(selectedItem.id, {
         naam: data.name,
         ...(data.password && { wachtwoord: data.password }),
-        ...(data.studentNumber && { studentNummer: data.studentNumber }),
+        ...(data.tableName && { tableName: data.tableName }),
         gebruikerTypeId,
       });
       if (result.success) {
@@ -121,14 +121,14 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
       }
     } else {
       // Create new - need username
-      const gebruikerNaam = data.type === 'student' && data.studentNumber
-        ? data.studentNumber
+      const gebruikerNaam = data.type === 'student' && data.tableName
+        ? data.tableName.toLowerCase().replaceAll(/\s+/g, '-')
         : data.username || data.name.toLowerCase().replaceAll(/\s+/g, '');
       const { createGebruiker } = await import('@/lib/actions/gebruikers');
       const result = await createGebruiker({
         gebruikerNaam,
         naam: data.name,
-        studentNummer: data.studentNumber,
+        tableName: data.tableName,
         wachtwoord: data.type === 'student' ? '' : data.password,
         gebruikerTypeId,
       });
@@ -232,7 +232,7 @@ export default function GebruikersClient({ gebruikers }: GebruikersClientProps) 
           name: selectedItem.name,
           type: getKeyFromDbName(selectedItem.type),
           username: selectedItem.username !== 'N.v.t' ? selectedItem.username : undefined,
-          studentNumber: selectedItem.studentNumber !== 'N.v.t' ? selectedItem.studentNumber : undefined
+          tableName: selectedItem.tableName !== 'N.v.t' ? selectedItem.tableName : undefined
         } : null}
         onConfirm={confirmEdit}
         onCancel={() => {

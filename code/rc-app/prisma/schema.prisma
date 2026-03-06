@@ -21,7 +21,7 @@ model Gebruiker {
   gebruikerId     Int             @id @default(autoincrement())
   gebruikerNaam   String          @unique
   naam            String
-  studentNummer   String?
+  tableName       String?
   wachtwoord      String
   gebruikerTypeId Int
   gebruikerType   GebruikerType   @relation(fields: [gebruikerTypeId], references: [gebruikerTypeId])

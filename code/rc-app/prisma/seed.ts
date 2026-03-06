@@ -61,7 +61,7 @@ async function main() {
     create: {
       gebruikerNaam: 'student1',
       naam: 'Student User',
-      studentNummer: 'r0123456',
+      tableName: 'Tafel 1',
       wachtwoord: 'student123', // In production, hash this password
       gebruikerTypeId: studentType.gebruikerTypeId,
     },
