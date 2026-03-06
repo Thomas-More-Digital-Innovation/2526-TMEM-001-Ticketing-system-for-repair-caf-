@@ -120,13 +120,13 @@ export default function ClientView() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#03091C] flex justify-center items-center">
-        <span className="text-white text-2xl">Laden...</span>
+        <span className="text-white text-2xl font-atkinson-hyperlegible">Laden...</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#03091C] flex justify-center items-start p-5 lg:p-10">
+    <div className="min-h-screen bg-[#03091C] flex justify-center items-start p-5 lg:p-10 font-atkinson-hyperlegible">
       {/* Connection Status Indicator */}
       <div className="fixed top-4 right-4 z-50">
         <div className={`px-3 py-1 rounded-full text-xs ${isConnected ? 'bg-green-500' : 'bg-red-500'} text-white`}>
@@ -137,7 +137,7 @@ export default function ClientView() {
       <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-12 lg:gap-12">
         {/* Afgegeven */}
         <div className="flex-1 flex flex-col items-center gap-5">
-          <h2 className="text-white font-roboto-mono text-2xl font-normal">Afgeleverd</h2>
+          <h2 className="text-white font-atkinson-hyperlegible text-2xl font-normal">Afgeleverd</h2>
           <div className="w-full flex flex-col gap-5">
             {items.afgeleverd.length === 0 ? (
               <div className="text-white/50 text-center py-8">Geen items</div>
@@ -147,7 +147,7 @@ export default function ClientView() {
                   key={item.voorwerpId}
                   className="w-full h-32 lg:h-44 flex items-center justify-center rounded-md bg-gray-400"
                 >
-                  <span className="text-black font-roboto-mono text-4xl font-normal">
+                  <span className="text-black font-atkinson-hyperlegible text-4xl font-normal">
                     {item.volgnummer}
                   </span>
                 </div>
@@ -158,7 +158,7 @@ export default function ClientView() {
 
         {/* In behandeling */}
         <div className="flex-1 flex flex-col items-center gap-5">
-          <h2 className="text-white font-roboto-mono text-2xl font-normal">In behandeling</h2>
+          <h2 className="text-white font-atkinson-hyperlegible text-2xl font-normal">In behandeling</h2>
           <div className="w-full flex flex-col gap-5">
             {items.inBehandeling.length === 0 ? (
               <div className="text-white/50 text-center py-8">Geen items</div>
@@ -168,7 +168,7 @@ export default function ClientView() {
                   key={item.voorwerpId}
                   className="w-full h-32 lg:h-44 flex items-center justify-center rounded-md bg-[#ED5028]"
                 >
-                  <span className="text-black font-roboto-mono text-4xl font-normal">
+                  <span className="text-black font-atkinson-hyperlegible text-4xl font-normal">
                     {item.volgnummer}
                   </span>
                 </div>
@@ -179,7 +179,7 @@ export default function ClientView() {
 
         {/* Klaar */}
         <div className="flex-1 flex flex-col items-center gap-5">
-          <h2 className="text-white font-roboto-mono text-2xl font-normal">Klaar</h2>
+          <h2 className="text-white font-atkinson-hyperlegible text-2xl font-normal">Klaar</h2>
           <div className="w-full flex flex-col gap-5">
             {items.klaar.length === 0 ? (
               <div className="text-white/50 text-center py-8">Geen items</div>
@@ -189,7 +189,7 @@ export default function ClientView() {
                   key={item.voorwerpId}
                   className="w-full h-32 lg:h-44 flex items-center justify-center rounded-md bg-green-500"
                 >
-                  <span className="text-black font-roboto-mono text-4xl font-normal">
+                  <span className="text-black font-atkinson-hyperlegible text-4xl font-normal">
                     {item.volgnummer}
                   </span>
                 </div>

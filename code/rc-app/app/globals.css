@@ -38,6 +38,10 @@ body {
   font-family: var(--font-roboto-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
 }
 
+.font-atkinson-hyperlegible {
+  font-family: var(--font-atkinson-hyperlegible), Arial, Helvetica, sans-serif;
+}
+
 * {
   box-sizing: border-box;
 }
