@@ -5,7 +5,8 @@ import Input from '../../components/Input';
 import Table from '../../components/Table';
 import ConfirmModal from '../../components/ConfirmModal';
 import VoorwerpEditModal from '../../components/modals/VoorwerpEditModal';
-import { updateVoorwerp } from '@/lib/actions/voorwerpen';
+import { printVoorwerpTicket, updateVoorwerp } from '@/lib/actions/voorwerpen';
+import { Printer } from '@deemlol/next-icons';
 
 interface Voorwerp {
     voorwerpId: number;
@@ -44,6 +45,10 @@ export default function VoorwerpenClient({ voorwerpen, afdelingen, statuses }: V
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState<TableRow | null>(null);
     const [modalTitle, setModalTitle] = useState('Voorwerp bewerken');
+    const [printingVolgnummer, setPrintingVolgnummer] = useState<string | null>(null);
+    const [showPrintFeedbackModal, setShowPrintFeedbackModal] = useState(false);
+    const [printFeedbackTitle, setPrintFeedbackTitle] = useState('');
+    const [printFeedbackDescription, setPrintFeedbackDescription] = useState('');
 
     const columns = [
         { key: 'registrationDate', header: 'Aanmeldingsdatum' },
@@ -91,6 +96,27 @@ export default function VoorwerpenClient({ voorwerpen, afdelingen, statuses }: V
     const handleDelete = (item: TableRow) => {
         setSelectedItem(item);
         setShowDeleteModal(true);
+    };
+
+    const handlePrintTicket = async (item: TableRow) => {
+        setPrintingVolgnummer(item.volgnummer);
+
+        try {
+            const result = await printVoorwerpTicket(item.volgnummer);
+
+            if (!result.success) {
+                setPrintFeedbackTitle('Printen mislukt');
+                setPrintFeedbackDescription('Fout bij het printen van ticket: ' + result.error);
+                setShowPrintFeedbackModal(true);
+                return;
+            }
+
+            setPrintFeedbackTitle('Ticket verzonden');
+            setPrintFeedbackDescription(`Ticket verzonden naar printer voor volgnummer ${item.volgnummer}`);
+            setShowPrintFeedbackModal(true);
+        } finally {
+            setPrintingVolgnummer(null);
+        }
     };
 
     const confirmEdit = async (data: { problem: string; description: string; advice: string; department: string; status: string }) => {
@@ -152,6 +178,20 @@ export default function VoorwerpenClient({ voorwerpen, afdelingen, statuses }: V
                         columns={columns}
                         data={filteredData}
                         onEdit={handleEdit}
+                        renderActions={(item) => (
+                            <button
+                                onClick={() => handlePrintTicket(item as TableRow)}
+                                className="cursor-pointer"
+                                disabled={printingVolgnummer === (item as TableRow).volgnummer}
+                                title="Print ticket"
+                                aria-label="Print ticket"
+                            >
+                                <Printer
+                                    size={24}
+                                    color={printingVolgnummer === (item as TableRow).volgnummer ? '#777777' : '#000000'}
+                                />
+                            </button>
+                        )}
                         renderCell={renderCell}
                         />
                 </div>
@@ -185,6 +225,16 @@ export default function VoorwerpenClient({ voorwerpen, afdelingen, statuses }: V
                 onConfirm={() => {}}
                 // onConfirm={confirmDelete}
                 onCancel={() => setShowDeleteModal(false)}
+            />
+
+            <ConfirmModal
+                isOpen={showPrintFeedbackModal}
+                title={printFeedbackTitle}
+                description={printFeedbackDescription}
+                onConfirm={() => setShowPrintFeedbackModal(false)}
+                onCancel={() => setShowPrintFeedbackModal(false)}
+                confirmText="OK"
+                cancelText="Sluiten"
             />
         </>
     );

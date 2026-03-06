@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 
 interface QRLoginModalProps {
@@ -17,6 +17,13 @@ export default function QRLoginModal({
   userName
 }: QRLoginModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [hostname, setHostname] = useState('localhost');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setHostname(window.location.host);
+    }
+  }, []);
 
   useEffect(() => {
     if (isOpen && token && canvasRef.current) {
@@ -63,6 +70,10 @@ export default function QRLoginModal({
         </h2>
 
         <div className="flex flex-col items-center mt-2">
+          <p className="text-white font-inter text-base font-normal leading-[22px] tracking-[-0.32px] text-center mb-2">
+            Surf naar {hostname} en scan de QR
+          </p>
+
           <div className="bg-white p-4 rounded-lg mb-4">
             <canvas ref={canvasRef} />
           </div>

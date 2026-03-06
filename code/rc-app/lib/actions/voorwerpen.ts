@@ -446,6 +446,77 @@ export async function updateVoorwerp(volgnummer: string, data: any) {
   }
 }
 
+export async function printVoorwerpTicket(volgnummer: string) {
+  try {
+    if (!volgnummer) {
+      return { success: false, error: 'Volgnummer is verplicht' }
+    }
+
+    const voorwerp = await prisma.voorwerp.findUnique({
+      where: { volgnummer },
+      include: {
+        klant: {
+          include: {
+            klantType: true,
+          },
+        },
+        voorwerpStatus: true,
+        afdeling: true,
+        gebruikteMaterialen: {
+          include: {
+            materiaal: true,
+          },
+        },
+      },
+    })
+
+    if (!voorwerp) {
+      return { success: false, error: 'Voorwerp niet gevonden' }
+    }
+
+    const { sendPrintJob } = await import('@/lib/printer-broadcast')
+
+    const isAfgeleverd = voorwerp.voorwerpStatus?.naam === 'Afgeleverd'
+    const materials = voorwerp.gebruikteMaterialen.map(gm => ({
+      naam: gm.materiaal.naam,
+      aantal: gm.aantal,
+      prijsPerStuk: gm.materiaal.prijs || 0,
+      totaalPrijs: (gm.materiaal.prijs || 0) * gm.aantal,
+    }))
+    const subtotal = materials.reduce((sum, material) => sum + material.totaalPrijs, 0)
+
+    const printResult = await sendPrintJob({
+      voorwerpId: voorwerp.voorwerpId,
+      volgnummer: voorwerp.volgnummer,
+      klantType: voorwerp.klant?.klantType?.naam || 'Unknown',
+      afdelingNaam: voorwerp.afdeling?.naam || 'Unknown',
+      voorwerpBeschrijving: voorwerp.voorwerpBeschrijving,
+      klachtBeschrijving: voorwerp.klachtBeschrijving,
+      printData: isAfgeleverd
+        ? {
+            type: 'delivery',
+            advies: voorwerp.advies,
+            materials,
+            subtotal,
+            totalPrice: subtotal,
+          }
+        : undefined,
+    })
+
+    if (!printResult.success) {
+      return {
+        success: false,
+        error: 'error' in printResult ? printResult.error : 'Fout bij printen van ticket',
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error printing ticket for voorwerp:', error)
+    return { success: false, error: 'Fout bij printen van ticket' }
+  }
+}
+
 interface CompleteVoorwerpWithAdviceInput {
   volgnummer: string
   advies: string

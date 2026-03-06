@@ -80,6 +80,7 @@ interface TableProps {
   onDelete?: (item: any) => void;
   showActions?: boolean;
   renderCell?: (key: string, value: any, item: any) => React.ReactNode;
+  renderActions?: (item: any) => React.ReactNode;
 }
 
 export default function Table({
@@ -88,7 +89,8 @@ export default function Table({
   onEdit,
   onDelete,
   showActions = true,
-  renderCell
+  renderCell,
+  renderActions
 }: Readonly<TableProps>) {
   return (
     <div className="w-full rounded border border-[#5B5B5B] bg-[#363636] overflow-hidden">
@@ -140,6 +142,7 @@ export default function Table({
               {showActions && (
                 <td className="border-t border-l border-black bg-white">
                   <div className="px-3 py-2.5 flex justify-end items-center gap-2">
+                    {renderActions && renderActions(item)}
                     {onEdit && (
                       <button onClick={() => onEdit(item)} className="cursor-pointer">
                         <Edit size={24} color="#000000" />
