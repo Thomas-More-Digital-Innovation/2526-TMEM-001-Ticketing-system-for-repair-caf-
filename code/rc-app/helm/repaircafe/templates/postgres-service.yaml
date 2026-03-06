@@ -1,0 +1,18 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "repaircafe.postgresHost" . }}
+  labels:
+    {{- include "repaircafe.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgres
+      port: {{ .Values.postgres.service.port }}
+      targetPort: postgres
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: {{ include "repaircafe.name" . }}-postgres
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

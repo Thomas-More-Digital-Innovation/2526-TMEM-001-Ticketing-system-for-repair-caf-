@@ -1,0 +1,109 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/thomas-more-digital-innovation/2526-tmem-001-ticketing-system-for-repair-caf--rc-app
+  pullPolicy: Always
+  tag: latest
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+  hosts:
+    - host: repaircafe.digitalinnovation.be
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: repaircafe-tls
+      hosts:
+        - repaircafe.digitalinnovation.be
+
+httpRoute:
+  enabled: false
+  annotations: {}
+  parentRefs:
+  - name: gateway
+    sectionName: http
+  hostnames:
+  - chart-example.local
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /headers
+
+resources: {}
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 3000
+readinessProbe:
+  httpGet:
+    path: /
+    port: 3000
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+app:
+  env:
+    APP_ENV: prod
+    NODE_ENV: production
+    APP_URL: https://repaircafe.digitalinnovation.be
+    SOCKET_CORS_ORIGINS: https://repaircafe.digitalinnovation.be
+  sessionSecret: replace-with-long-random-secret
+  uploads:
+    enabled: true
+    size: 5Gi
+    storageClassName: ""
+
+postgres:
+  enabled: true
+  image:
+    repository: postgres
+    tag: 16-alpine
+    pullPolicy: IfNotPresent
+  service:
+    port: 5432
+  auth:
+    username: postgres
+    password: postgres
+    database: repaircafe
+  persistence:
+    enabled: true
+    size: 512Mi
+    storageClassName: ""
+  resources: {}

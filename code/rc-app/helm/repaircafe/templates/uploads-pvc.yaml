@@ -1,0 +1,17 @@
+{{- if .Values.app.uploads.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "repaircafe.uploadsPvcName" . }}
+  labels:
+    {{- include "repaircafe.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.app.uploads.size }}
+  {{- if .Values.app.uploads.storageClassName }}
+  storageClassName: {{ .Values.app.uploads.storageClassName }}
+  {{- end }}
+{{- end }}
