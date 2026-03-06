@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { getServerActionUser } from '@/lib/auth-server'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -8,6 +9,8 @@ import { revalidatePath } from 'next/cache'
  */
 export async function getAllPrinters() {
   try {
+    await getServerActionUser(['Admin'])
+
     const printers = await prisma.printer.findMany({
       orderBy: {
         printerNaam: 'asc',
@@ -33,6 +36,8 @@ export async function getAllPrinters() {
  */
 export async function getPrinterById(printerId: number) {
   try {
+    await getServerActionUser(['Admin'])
+
     const printer = await prisma.printer.findUnique({
       where: { printerId },
       include: {
@@ -61,6 +66,8 @@ export async function getPrinterById(printerId: number) {
  */
 export async function getConnectedPrinters() {
   try {
+    await getServerActionUser(['Admin'])
+
     const printers = await prisma.printer.findMany({
       where: {
         isConnected: true,
@@ -91,6 +98,8 @@ export async function createPrintJob(data: {
   printData?: any // Additional JSON data (e.g., payment details, materials)
 }) {
   try {
+    await getServerActionUser(['Admin'])
+
     const printJob = await prisma.printJob.create({
       data: {
         printerId: data.printerId,
@@ -122,6 +131,8 @@ export async function getPrintJobs(filters?: {
   limit?: number
 }) {
   try {
+    await getServerActionUser(['Admin'])
+
     const where: any = {}
 
     if (filters?.printerId) {
@@ -155,6 +166,8 @@ export async function getPrintJobs(filters?: {
  */
 export async function getPendingPrintJobsCount(printerId?: number) {
   try {
+    await getServerActionUser(['Admin'])
+
     const where: any = { status: 'pending' }
 
     if (printerId) {
@@ -177,6 +190,8 @@ export async function getPendingPrintJobsCount(printerId?: number) {
  */
 export async function deleteOldPrintJobs(daysOld: number = 30) {
   try {
+    await getServerActionUser(['Admin'])
+
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - daysOld)
 
@@ -207,6 +222,8 @@ export async function deleteOldPrintJobs(daysOld: number = 30) {
  */
 export async function retryPrintJob(printJobId: number) {
   try {
+    await getServerActionUser(['Admin'])
+
     const printJob = await prisma.printJob.update({
       where: { printJobId },
       data: {

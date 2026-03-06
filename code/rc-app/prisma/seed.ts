@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { hashPassword } from '@/lib/password'
 
 const prisma = new PrismaClient()
 
@@ -32,14 +33,20 @@ async function main() {
 
   console.log('Created gebruiker types:', { adminType, counterType, studentType })
 
-  // Seed Gebruikers (with hashed passwords - in production use bcrypt)
+  const [adminPassword, baliePassword, studentPassword] = await Promise.all([
+    hashPassword('admin123'),
+    hashPassword('balie123'),
+    hashPassword('student123'),
+  ])
+
+  // Seed Gebruikers
   const admin = await prisma.gebruiker.upsert({
     where: { gebruikerNaam: 'admin' },
     update: {},
     create: {
       gebruikerNaam: 'admin',
       naam: 'Administrator',
-      wachtwoord: 'admin123', // In production, hash this password
+      wachtwoord: adminPassword,
       gebruikerTypeId: adminType.gebruikerTypeId,
     },
   })
@@ -50,7 +57,7 @@ async function main() {
     create: {
       gebruikerNaam: 'balie1',
       naam: 'Balie Medewerker',
-      wachtwoord: 'balie123', // In production, hash this password
+      wachtwoord: baliePassword,
       gebruikerTypeId: counterType.gebruikerTypeId,
     },
   })
@@ -62,7 +69,7 @@ async function main() {
       gebruikerNaam: 'student1',
       naam: 'Student User',
       tableName: 'Tafel 1',
-      wachtwoord: 'student123', // In production, hash this password
+      wachtwoord: studentPassword,
       gebruikerTypeId: studentType.gebruikerTypeId,
     },
   })

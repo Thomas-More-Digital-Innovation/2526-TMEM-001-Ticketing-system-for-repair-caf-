@@ -1,6 +1,7 @@
 'use server'
 
 import prisma from '@/lib/prisma'
+import { getServerActionUser } from '@/lib/auth-server'
 import { revalidatePath } from 'next/cache'
 import { getAfdelingen } from '@/lib/data/afdelingen'
 
@@ -12,6 +13,8 @@ export async function getAfdelingenForClient() {
 // Create a new afdeling
 export async function createAfdeling(naam: string) {
   try {
+    await getServerActionUser(['Admin'])
+
     const afdeling = await prisma.afdeling.create({
       data: { naam },
     })
@@ -27,6 +30,8 @@ export async function createAfdeling(naam: string) {
 // Update an existing afdeling
 export async function updateAfdeling(afdelingId: number, naam: string) {
   try {
+    await getServerActionUser(['Admin'])
+
     const afdeling = await prisma.afdeling.update({
       where: { afdelingId },
       data: { naam },
@@ -43,6 +48,8 @@ export async function updateAfdeling(afdelingId: number, naam: string) {
 // Delete an afdeling
 export async function deleteAfdeling(afdelingId: number) {
   try {
+    await getServerActionUser(['Admin'])
+
     await prisma.afdeling.delete({
       where: { afdelingId },
     })

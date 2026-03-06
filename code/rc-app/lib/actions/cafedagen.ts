@@ -1,6 +1,7 @@
 'use server'
 
 import prisma from '@/lib/prisma'
+import { getServerActionUser } from '@/lib/auth-server'
 import { revalidatePath } from 'next/cache'
 
 interface CreateCafedagInput {
@@ -12,6 +13,8 @@ interface CreateCafedagInput {
 // Create a new cafedag
 export async function createCafedag(data: CreateCafedagInput) {
     try {
+        await getServerActionUser(['Admin'])
+
         const cafedag = await prisma.cafedag.create({
             data: {
                 cafeId: data.cafeId,
@@ -37,6 +40,8 @@ export async function updateCafedag(
     data: Partial<CreateCafedagInput>
 ) {
     try {
+        await getServerActionUser(['Admin'])
+
         const cafedag = await prisma.cafedag.update({
             where: { cafedagId },
             data: {
@@ -60,6 +65,8 @@ export async function updateCafedag(
 // Delete a cafedag
 export async function deleteCafedag(cafedagId: number) {
     try {
+        await getServerActionUser(['Admin'])
+
         await prisma.cafedag.delete({
             where: { cafedagId },
         })
@@ -79,6 +86,8 @@ export async function createCafe(
     cafePatroon: string
 ) {
     try {
+        await getServerActionUser(['Admin'])
+
         const cafe = await prisma.cafe.create({
             data: {
                 naam,
@@ -103,6 +112,8 @@ export async function updateCafe(
     cafePatroon: string
 ) {
     try {
+        await getServerActionUser(['Admin'])
+
         const cafe = await prisma.cafe.update({
             where: { cafeId },
             data: {
@@ -123,6 +134,8 @@ export async function updateCafe(
 // Delete a cafe
 export async function deleteCafe(cafeId: number) {
     try {
+        await getServerActionUser(['Admin'])
+
         await prisma.cafe.delete({
             where: { cafeId },
         })

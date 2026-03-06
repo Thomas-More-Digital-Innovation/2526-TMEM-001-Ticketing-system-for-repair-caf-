@@ -1,6 +1,7 @@
 'use server'
 
 import prisma from '@/lib/prisma'
+import { getServerActionUser } from '@/lib/auth-server'
 import { revalidatePath } from 'next/cache'
 
 // Add material to voorwerp
@@ -10,6 +11,8 @@ export async function addMateriaalToVoorwerp(
   aantal: number
 ) {
   try {
+    await getServerActionUser(['Admin', 'Student'])
+
     // Get voorwerp by volgnummer
     const voorwerp = await prisma.voorwerp.findUnique({
       where: { volgnummer },
@@ -62,6 +65,8 @@ export async function removeMateriaalFromVoorwerp(
   materiaalId: number
 ) {
   try {
+    await getServerActionUser(['Admin', 'Student'])
+
     const voorwerp = await prisma.voorwerp.findUnique({
       where: { volgnummer },
     })
@@ -92,6 +97,8 @@ export async function updateMateriaalAantal(
   aantal: number
 ) {
   try {
+    await getServerActionUser(['Admin', 'Student'])
+
     const voorwerp = await prisma.voorwerp.findUnique({
       where: { volgnummer },
     })
@@ -135,6 +142,8 @@ export async function updateMateriaalAantal(
 // Create a new materiaal
 export async function createMateriaal(naam: string, fotoUrl?: string, prijs?: number) {
   try {
+    await getServerActionUser(['Admin'])
+
     const materiaal = await prisma.materiaal.create({
       data: { 
         naam,
@@ -154,6 +163,8 @@ export async function createMateriaal(naam: string, fotoUrl?: string, prijs?: nu
 // Update an existing materiaal
 export async function updateMateriaal(materiaalId: number, naam: string, fotoUrl?: string | null, prijs?: number) {
   try {
+    await getServerActionUser(['Admin'])
+
     const updateData: any = { naam };
     
     // Only update fotoUrl if it's explicitly provided (undefined means don't change)
@@ -182,6 +193,8 @@ export async function updateMateriaal(materiaalId: number, naam: string, fotoUrl
 // Delete a materiaal
 export async function deleteMateriaal(materiaalId: number) {
   try {
+    await getServerActionUser(['Admin'])
+
     await prisma.materiaal.delete({
       where: { materiaalId },
     })

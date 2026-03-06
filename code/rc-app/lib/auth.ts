@@ -11,12 +11,6 @@ export interface User {
   };
 }
 
-export function getSession() {
-  if (typeof window === 'undefined') return null;
-  const sessionId = localStorage.getItem('sessionId');
-  return sessionId ? parseInt(sessionId) : null;
-}
-
 export function getUser(): User | null {
   if (typeof window === 'undefined') return null;
   const userStr = localStorage.getItem('user');
@@ -24,22 +18,17 @@ export function getUser(): User | null {
 }
 
 export function isAuthenticated(): boolean {
-  return !!getSession() && !!getUser();
+  return !!getUser();
 }
 
 export async function logout() {
-  const sessionId = getSession();
-  
-  if (sessionId) {
-    try {
-      const { logoutAction } = await import('@/lib/actions/auth');
-      await logoutAction(sessionId);
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  try {
+    const { logoutAction } = await import('@/lib/actions/auth');
+    await logoutAction();
+  } catch (error) {
+    console.error('Logout error:', error);
   }
 
-  localStorage.removeItem('sessionId');
   localStorage.removeItem('user');
   
   if (typeof window !== 'undefined') {
@@ -65,11 +54,5 @@ export function isStudent(): boolean {
 }
 
 export function getAuthHeaders(): HeadersInit {
-  const sessionId = getSession();
-  if (!sessionId) {
-    return {};
-  }
-  return {
-    'Authorization': `Bearer ${sessionId}`,
-  };
+  return {};
 }

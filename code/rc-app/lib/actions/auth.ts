@@ -1,13 +1,20 @@
 'use server'
 
 import prisma from '@/lib/prisma'
+import { clearSessionCookie, getServerActionSessionId, setSessionCookie } from '@/lib/auth-server'
+import { hashPassword, isPasswordHash, verifyPassword } from '@/lib/password'
 
-export async function logoutAction(sessionId: number) {
+export async function logoutAction() {
   try {
-    // Delete the session from database
-    await prisma.sessie.delete({
-      where: { sessieId: sessionId },
-    })
+    const sessionId = await getServerActionSessionId()
+
+    if (sessionId) {
+      await prisma.sessie.deleteMany({
+        where: { sessieId: sessionId },
+      })
+    }
+
+    await clearSessionCookie()
 
     return { success: true }
   } catch (error) {
@@ -32,8 +39,23 @@ export async function loginAction(username: string, password: string) {
       return { success: false, error: 'Ongeldige gebruikersnaam of wachtwoord' }
     }
 
-    // Check password (in production, use bcrypt.compare)
-    if (gebruiker.wachtwoord !== password) {
+    let isValidPassword = false
+
+    if (isPasswordHash(gebruiker.wachtwoord)) {
+      isValidPassword = await verifyPassword(password, gebruiker.wachtwoord)
+    } else {
+      isValidPassword = gebruiker.wachtwoord === password
+
+      if (isValidPassword) {
+        const hashedPassword = await hashPassword(password)
+        await prisma.gebruiker.update({
+          where: { gebruikerId: gebruiker.gebruikerId },
+          data: { wachtwoord: hashedPassword },
+        })
+      }
+    }
+
+    if (!isValidPassword) {
       return { success: false, error: 'Ongeldige gebruikersnaam of wachtwoord' }
     }
 
@@ -45,13 +67,13 @@ export async function loginAction(username: string, password: string) {
       },
     })
 
-    // Return user info without password
+    await setSessionCookie(session.sessieId)
+
     const { wachtwoord, ...userWithoutPassword } = gebruiker
 
     return {
       success: true,
       user: userWithoutPassword,
-      sessionId: session.sessieId,
     }
   } catch (error) {
     console.error('Login error:', error)
@@ -87,13 +109,13 @@ export async function loginWithQRToken(token: string) {
       },
     })
 
-    // Return user info without password
+    await setSessionCookie(session.sessieId)
+
     const { wachtwoord, ...userWithoutPassword } = qrLogin.gebruiker
 
     return {
       success: true,
       user: userWithoutPassword,
-      sessionId: session.sessieId,
     }
   } catch (error) {
     console.error('QR Login error:', error)

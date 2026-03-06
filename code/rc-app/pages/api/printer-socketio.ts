@@ -19,11 +19,16 @@ const printerIoHandler = async (req: NextApiRequest, res: NextApiResponseServerI
   if (!globalThis.printerIo) {
     console.log('Setting up Printer Socket.IO server...')
 
+    const allowedOrigins = (process.env.SOCKET_CORS_ORIGINS || process.env.APP_URL || 'http://localhost:3000')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean)
+
     const io = new Server(res.socket.server, {
       path: '/api/printer-socketio',
       addTrailingSlash: false,
       cors: {
-        origin: '*',
+        origin: allowedOrigins,
         methods: ['GET', 'POST'],
       },
     })

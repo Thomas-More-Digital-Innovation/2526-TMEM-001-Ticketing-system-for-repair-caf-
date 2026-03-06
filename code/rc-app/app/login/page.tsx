@@ -30,8 +30,6 @@ export default function LoginPage() {
         return;
       }
 
-      // Store session info in localStorage
-      localStorage.setItem('sessionId', result.sessionId!.toString());
       localStorage.setItem('user', JSON.stringify(result.user));
 
       // Redirect based on user type
@@ -90,8 +88,6 @@ export default function LoginPage() {
         return;
       }
 
-      // Store session info in localStorage
-      localStorage.setItem('sessionId', result.sessionId!.toString());
       localStorage.setItem('user', JSON.stringify(result.user));
 
       // Redirect based on user type

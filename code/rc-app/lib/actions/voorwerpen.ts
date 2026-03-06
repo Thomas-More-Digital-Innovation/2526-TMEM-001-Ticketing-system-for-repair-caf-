@@ -1,6 +1,7 @@
 'use server'
 
 import prisma from '@/lib/prisma'
+import { getServerActionUser } from '@/lib/auth-server'
 import { revalidatePath } from 'next/cache'
 
 interface CreateVoorwerpInput {
@@ -14,6 +15,8 @@ interface CreateVoorwerpInput {
 
 export async function createVoorwerp(data: CreateVoorwerpInput) {
   try {
+    await getServerActionUser(['Admin', 'Balie'])
+
     const now = new Date()
     const voorwerp = await prisma.voorwerp.create({
       data: {
@@ -50,6 +53,8 @@ interface UpdateVoorwerpStatusInput {
 
 export async function updateVoorwerpStatus(data: UpdateVoorwerpStatusInput) {
   try {
+    await getServerActionUser(['Admin', 'Balie', 'Student'])
+
     const voorwerp = await prisma.voorwerp.update({
       where: { volgnummer: data.volgnummer },
       data: { voorwerpStatusId: data.voorwerpStatusId },
@@ -90,6 +95,8 @@ interface RegisterVoorwerpInput {
 
 export async function registerVoorwerp(data: RegisterVoorwerpInput) {
   try {
+    await getServerActionUser(['Admin', 'Balie'])
+
     // Validate required fields
     if (!data.customerName || !data.customerType || !data.problemDescription || !data.itemDescription) {
       return { success: false, error: 'Verplichte velden ontbreken' }
@@ -281,6 +288,8 @@ export async function registerVoorwerp(data: RegisterVoorwerpInput) {
 
 export async function getVoorwerpForDelivery(volgnummer: string) {
   try {
+    await getServerActionUser(['Admin', 'Balie'])
+
     if (!volgnummer) {
       return { success: false, error: 'Volgnummer is verplicht' }
     }
@@ -321,6 +330,8 @@ export async function getVoorwerpForDelivery(volgnummer: string) {
 
 export async function confirmDelivery(volgnummer: string) {
   try {
+    await getServerActionUser(['Admin', 'Balie'])
+
     if (!volgnummer) {
       return { success: false, error: 'Volgnummer is verplicht' }
     }
@@ -417,6 +428,8 @@ export async function confirmDelivery(volgnummer: string) {
 
 export async function updateVoorwerp(volgnummer: string, data: any) {
   try {
+    await getServerActionUser(['Admin', 'Student'])
+
     const voorwerp = await prisma.voorwerp.update({
       where: { volgnummer },
       data: data,
@@ -448,6 +461,8 @@ export async function updateVoorwerp(volgnummer: string, data: any) {
 
 export async function printVoorwerpTicket(volgnummer: string) {
   try {
+    await getServerActionUser(['Admin', 'Student'])
+
     if (!volgnummer) {
       return { success: false, error: 'Volgnummer is verplicht' }
     }
@@ -525,6 +540,8 @@ interface CompleteVoorwerpWithAdviceInput {
 
 export async function completeVoorwerpWithAdvice(data: CompleteVoorwerpWithAdviceInput) {
   try {
+    await getServerActionUser(['Admin', 'Student'])
+
     if (!data.volgnummer) {
       return { success: false, error: 'Volgnummer is verplicht' }
     }

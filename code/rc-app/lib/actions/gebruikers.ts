@@ -1,6 +1,8 @@
 'use server'
 
 import prisma from '@/lib/prisma'
+import { getServerActionUser } from '@/lib/auth-server'
+import { hashPassword } from '@/lib/password'
 import { revalidatePath } from 'next/cache'
 import crypto from 'node:crypto'
 
@@ -14,6 +16,10 @@ interface CreateGebruikerInput {
 
 export async function createGebruiker(data: CreateGebruikerInput) {
   try {
+    await getServerActionUser(['Admin'])
+
+    const hashedPassword = await hashPassword(data.wachtwoord || '')
+
     // Check if this is a student (gebruikerTypeId 2 is typically student)
     const gebruikerType = await prisma.gebruikerType.findUnique({
       where: { gebruikerTypeId: data.gebruikerTypeId },
@@ -44,7 +50,7 @@ export async function createGebruiker(data: CreateGebruikerInput) {
         data: {
           gebruikerNaam: data.gebruikerNaam,
           naam: data.naam,
-          wachtwoord: data.wachtwoord, // In production, hash this password!
+          wachtwoord: hashedPassword,
           gebruikerTypeId: data.gebruikerTypeId,
           ...(data.tableName && { tableName: data.tableName })
         },
@@ -69,7 +75,7 @@ export async function createGebruiker(data: CreateGebruikerInput) {
         data: {
           gebruikerNaam: data.gebruikerNaam,
           naam: data.naam,
-          wachtwoord: data.wachtwoord, // In production, hash this password!
+          wachtwoord: hashedPassword,
           gebruikerTypeId: data.gebruikerTypeId,
           ...(data.tableName && { tableName: data.tableName })
         },
@@ -99,10 +105,12 @@ export async function updateGebruiker(
   }
 ) {
   try {
+    await getServerActionUser(['Admin'])
+
     const updateData: any = {}
     if (data.gebruikerNaam) updateData.gebruikerNaam = data.gebruikerNaam
     if (data.naam) updateData.naam = data.naam
-    if (data.wachtwoord) updateData.wachtwoord = data.wachtwoord // In production, hash this!
+    if (data.wachtwoord) updateData.wachtwoord = await hashPassword(data.wachtwoord)
     if (data.gebruikerTypeId) updateData.gebruikerTypeId = data.gebruikerTypeId
     if (data.tableName) updateData.tableName = data.tableName
 
@@ -125,6 +133,8 @@ export async function updateGebruiker(
 // Delete a gebruiker
 export async function deleteGebruiker(gebruikerId: number) {
   try {
+    await getServerActionUser(['Admin'])
+
     await prisma.gebruiker.delete({
       where: { gebruikerId },
     })
@@ -139,6 +149,8 @@ export async function deleteGebruiker(gebruikerId: number) {
 
 export async function generateQRLoginToken(gebruikerId: number) {
   try {
+    await getServerActionUser(['Admin'])
+
     // Generate a unique token
     const token = crypto.randomBytes(32).toString('hex')
 

@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveUploadedFile } from '@/lib/fileUpload';
+import { requireAuth } from '@/lib/auth-server';
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAuth(['Admin'])(request)
+    if (authResult instanceof Response) {
+      return authResult
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 

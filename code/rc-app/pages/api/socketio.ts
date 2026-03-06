@@ -17,12 +17,17 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
   // Initialize Socket.IO server if not already done
   if (!globalThis.io) {
     console.log('Setting up Socket.IO server...')
+
+    const allowedOrigins = (process.env.SOCKET_CORS_ORIGINS || process.env.APP_URL || 'http://localhost:3000')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean)
     
     const io = new Server(res.socket.server, {
       path: '/api/socketio',
       addTrailingSlash: false,
       cors: {
-        origin: '*',
+        origin: allowedOrigins,
         methods: ['GET', 'POST'],
       },
     })
