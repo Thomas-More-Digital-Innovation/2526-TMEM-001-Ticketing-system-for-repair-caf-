@@ -54,4 +54,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Run migrations and seed only in production mode
-CMD ["/bin/sh", "-c", "if [ \"$APP_ENV\" = \"prod\" ]; then npx prisma migrate deploy && npx prisma db seed; fi && node server.js"]
+CMD ["/bin/sh", "-c", "if [ \"$APP_ENV\" = \"prod\" ]; then npx prisma migrate deploy; fi && node server.js"]
