@@ -54,4 +54,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Run migrations and seed before starting the app
-CMD ["/bin/sh", "-c", "npm run db:migrate:deploy && npm run db:seed && node server.js"]
+CMD ["/bin/sh", "-c", "npm run db:migrate:deploy && node server.js"]
