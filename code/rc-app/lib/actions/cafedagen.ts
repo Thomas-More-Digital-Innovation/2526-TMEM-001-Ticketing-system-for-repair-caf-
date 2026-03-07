@@ -6,19 +6,55 @@ import { revalidatePath } from 'next/cache'
 
 interface CreateCafedagInput {
     cafeId: number
-    startDatum: Date
-    eindDatum: Date
+    startDatum: Date | string
+    eindDatum: Date | string
 }
 
-function toStartOfDay(date: Date) {
+function parseCalendarDate(dateInput: Date | string) {
+    if (typeof dateInput === 'string') {
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateInput)
+        if (!match) return null
+
+        const year = Number.parseInt(match[1], 10)
+        const month = Number.parseInt(match[2], 10)
+        const day = Number.parseInt(match[3], 10)
+
+        if (
+            Number.isNaN(year) ||
+            Number.isNaN(month) ||
+            Number.isNaN(day) ||
+            month < 1 ||
+            month > 12 ||
+            day < 1 ||
+            day > 31
+        ) {
+            return null
+        }
+
+        return new Date(Date.UTC(year, month - 1, day))
+    }
+
+    const normalizedDate = new Date(dateInput)
+    if (Number.isNaN(normalizedDate.getTime())) {
+        return null
+    }
+
+    return new Date(Date.UTC(
+        normalizedDate.getUTCFullYear(),
+        normalizedDate.getUTCMonth(),
+        normalizedDate.getUTCDate()
+    ))
+}
+
+function toStartOfDayUTC(date: Date) {
     const normalizedDate = new Date(date)
-    normalizedDate.setHours(0, 0, 0, 0)
+    normalizedDate.setUTCHours(0, 0, 0, 0)
     return normalizedDate
 }
 
-function toEndOfDay(date: Date) {
+function toEndOfDayUTC(date: Date) {
     const normalizedDate = new Date(date)
-    normalizedDate.setHours(23, 59, 59, 999)
+    normalizedDate.setUTCHours(23, 59, 59, 999)
     return normalizedDate
 }
 
@@ -27,8 +63,15 @@ export async function createCafedag(data: CreateCafedagInput) {
     try {
         await getServerActionUser(['Admin'])
 
-        const startDatum = toStartOfDay(data.startDatum)
-        const eindDatum = toEndOfDay(data.eindDatum)
+        const parsedStartDatum = parseCalendarDate(data.startDatum)
+        const parsedEindDatum = parseCalendarDate(data.eindDatum)
+
+        if (!parsedStartDatum || !parsedEindDatum) {
+            return { success: false, error: 'Ongeldige start- of einddatum' }
+        }
+
+        const startDatum = toStartOfDayUTC(parsedStartDatum)
+        const eindDatum = toEndOfDayUTC(parsedEindDatum)
 
         if (eindDatum < startDatum) {
             return { success: false, error: 'Einddatum mag niet voor startdatum liggen' }
@@ -70,12 +113,19 @@ export async function updateCafedag(
             return { success: false, error: 'Cafedag niet gevonden' }
         }
 
-        const startDatum = data.startDatum
-            ? toStartOfDay(data.startDatum)
+        const parsedStartDatum = data.startDatum
+            ? parseCalendarDate(data.startDatum)
             : existingCafedag.startDatum
-        const eindDatum = data.eindDatum
-            ? toEndOfDay(data.eindDatum)
+        const parsedEindDatum = data.eindDatum
+            ? parseCalendarDate(data.eindDatum)
             : existingCafedag.eindDatum
+
+        if (!parsedStartDatum || !parsedEindDatum) {
+            return { success: false, error: 'Ongeldige start- of einddatum' }
+        }
+
+        const startDatum = toStartOfDayUTC(parsedStartDatum)
+        const eindDatum = toEndOfDayUTC(parsedEindDatum)
 
         if (eindDatum < startDatum) {
             return { success: false, error: 'Einddatum mag niet voor startdatum liggen' }

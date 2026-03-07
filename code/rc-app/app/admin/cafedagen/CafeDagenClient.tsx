@@ -87,7 +87,7 @@ export default function CafeDagenClient({ cafedagen }: CafeDagenClientProps) {
         setShowDeleteModal(true);
     };
 
-    const confirmEdit = async (data: { startDate: Date; endDate: Date; location: string; name: string }) => {
+    const confirmEdit = async (data: { startDate: string; endDate: string; location: string; name: string }) => {
         if (selectedItem) {
             // Update existing cafedag and cafe
             const cafedagResult = await updateCafedag(selectedItem.cafedagId, {
@@ -120,8 +120,8 @@ export default function CafeDagenClient({ cafedagen }: CafeDagenClientProps) {
             if (cafeResult.success && cafeResult.cafe) {
                 const cafedagResult = await createCafedag({
                     cafeId: cafeResult.cafe.cafeId,
-                    startDatum: new Date(data.startDate),
-                    eindDatum: new Date(data.endDate),
+                    startDatum: data.startDate,
+                    eindDatum: data.endDate,
                 });
 
                 if (cafedagResult.success) {

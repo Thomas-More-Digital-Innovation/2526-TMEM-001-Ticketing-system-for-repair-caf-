@@ -13,8 +13,8 @@ interface CafeDagEditModalProps {
     name: string;
   } | null;
   readonly onConfirm: (data: {
-    startDate: Date;
-    endDate: Date;
+    startDate: string;
+    endDate: string;
     location: string;
     name: string;
   }) => void;
@@ -29,21 +29,20 @@ export default function CafeDagEditModal({
   onCancel,
   title = 'CafeDag bewerken'
 }: CafeDagEditModalProps) {
-  const [startDate, setStartDate] = useState<Date | null>(item?.startDate ?? null);
-  const [endDate, setEndDate] = useState<Date | null>(item?.endDate ?? null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [location, setLocation] = useState(item?.location || '');
   const [name, setName] = useState(item?.name || '');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    setStartDate(item?.startDate ?? null);
-    setEndDate(item?.endDate ?? null);
+    setStartDate(formatForInput(item?.startDate));
+    setEndDate(formatForInput(item?.endDate));
     setLocation(item?.location || '');
     setName(item?.name || '');
   }, [item]);
 
   const handleConfirm = () => {
-    // ensure non-null Dates are passed
     if (!startDate || !endDate) {
       setError('Vul start- en einddatum in');
       return;
@@ -52,19 +51,12 @@ export default function CafeDagEditModal({
     onConfirm({ startDate, endDate, location, name });
   };
 
-  const formatForInput = (d: Date | null) => {
+  const formatForInput = (d?: Date | null) => {
     if (!d) return '';
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
-  };
-
-  const parseFromInput = (value: string) => {
-    if (!value) return null;
-    const [y, m, day] = value.split('-').map((v) => Number.parseInt(v, 10));
-    if (Number.isNaN(y) || Number.isNaN(m) || Number.isNaN(day)) return null;
-    return new Date(y, m - 1, day);
   };
 
   return (
@@ -79,16 +71,16 @@ export default function CafeDagEditModal({
         placeholder="Datum"
         required
         type="date"
-        value={formatForInput(startDate)}
-        onChange={(e) => setStartDate(parseFromInput(e.target.value))}
+        value={startDate}
+        onChange={(e) => setStartDate(e.target.value)}
       />
       <Input
         label="Eind"
         placeholder="Datum"
         required
         type="date"
-        value={formatForInput(endDate)}
-        onChange={(e) => setEndDate(parseFromInput(e.target.value))}
+        value={endDate}
+        onChange={(e) => setEndDate(e.target.value)}
       />
       {error && (
         <div className="text-red-400 text-xs mt-1">{error}</div>
