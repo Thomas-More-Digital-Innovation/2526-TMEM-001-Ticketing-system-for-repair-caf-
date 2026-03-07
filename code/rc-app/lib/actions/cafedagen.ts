@@ -10,16 +10,35 @@ interface CreateCafedagInput {
     eindDatum: Date
 }
 
+function toStartOfDay(date: Date) {
+    const normalizedDate = new Date(date)
+    normalizedDate.setHours(0, 0, 0, 0)
+    return normalizedDate
+}
+
+function toEndOfDay(date: Date) {
+    const normalizedDate = new Date(date)
+    normalizedDate.setHours(23, 59, 59, 999)
+    return normalizedDate
+}
+
 // Create a new cafedag
 export async function createCafedag(data: CreateCafedagInput) {
     try {
         await getServerActionUser(['Admin'])
 
+        const startDatum = toStartOfDay(data.startDatum)
+        const eindDatum = toEndOfDay(data.eindDatum)
+
+        if (eindDatum < startDatum) {
+            return { success: false, error: 'Einddatum mag niet voor startdatum liggen' }
+        }
+
         const cafedag = await prisma.cafedag.create({
             data: {
                 cafeId: data.cafeId,
-                startDatum: data.startDatum,
-                eindDatum: data.eindDatum,
+                startDatum,
+                eindDatum,
             },
             include: {
                 cafe: true,
@@ -42,12 +61,32 @@ export async function updateCafedag(
     try {
         await getServerActionUser(['Admin'])
 
+        const existingCafedag = await prisma.cafedag.findUnique({
+            where: { cafedagId },
+            select: { startDatum: true, eindDatum: true },
+        })
+
+        if (!existingCafedag) {
+            return { success: false, error: 'Cafedag niet gevonden' }
+        }
+
+        const startDatum = data.startDatum
+            ? toStartOfDay(data.startDatum)
+            : existingCafedag.startDatum
+        const eindDatum = data.eindDatum
+            ? toEndOfDay(data.eindDatum)
+            : existingCafedag.eindDatum
+
+        if (eindDatum < startDatum) {
+            return { success: false, error: 'Einddatum mag niet voor startdatum liggen' }
+        }
+
         const cafedag = await prisma.cafedag.update({
             where: { cafedagId },
             data: {
                 ...(data.cafeId && { cafeId: data.cafeId }),
-                ...(data.startDatum && { startDatum: data.startDatum }),
-                ...(data.eindDatum && { eindDatum: data.eindDatum }),
+                startDatum,
+                eindDatum,
             },
             include: {
                 cafe: true,
